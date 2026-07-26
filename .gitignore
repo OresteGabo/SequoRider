@@ -1,0 +1,33 @@
+# --- Gradle & Android ---
+.gradle/
+**/build/
+!src/**/build/
+local.properties
+.DS_Store
+captures
+.externalNativeBuild
+.cxx
+
+# --- JetBrains / IntelliJ / Android Studio ---
+.idea/
+*.iml
+.kotlin/
+
+# --- Xcode & iOS ---
+xcuserdata/
+DerivedData/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcshareddata/xcschemes/
+.swiftpm/
+.netrc
+
+# --- Allow necessary Xcode workspace files ---
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+# --- Node & Web (if applicable) ---
+node_modules/
