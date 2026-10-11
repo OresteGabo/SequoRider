@@ -153,6 +153,14 @@ enum class RiderText {
     LockerSlotPlaceholder,
     QrPlaceholder,
     ConfirmDeposit,
+    HistoryFilterAll,
+    HistoryFilterCompleted,
+    HistoryFilterProblems,
+    HistoryFilterCancelled,
+    HistoryLocalDemo,
+    HistoryEmpty,
+    CompletionTime,
+    IssueStatus,
 }
 
 @Composable
@@ -307,6 +315,14 @@ private val englishText = mapOf(
     RiderText.LockerSlotPlaceholder to "Local placeholder until locker endpoint is ready",
     RiderText.QrPlaceholder to "QR scan placeholder. Manual code entry is available for now.",
     RiderText.ConfirmDeposit to "Confirm deposit",
+    RiderText.HistoryFilterAll to "All",
+    RiderText.HistoryFilterCompleted to "Completed",
+    RiderText.HistoryFilterProblems to "Problems",
+    RiderText.HistoryFilterCancelled to "Cancelled",
+    RiderText.HistoryLocalDemo to "Local/demo history shown until server history is connected.",
+    RiderText.HistoryEmpty to "No history for this filter.",
+    RiderText.CompletionTime to "Completion time",
+    RiderText.IssueStatus to "Issue status",
 )
 
 private val frenchText = mapOf(
@@ -452,4 +468,12 @@ private val frenchText = mapOf(
     RiderText.LockerSlotPlaceholder to "Placeholder local jusqu'a l'endpoint casier",
     RiderText.QrPlaceholder to "Placeholder scan QR. La saisie manuelle est disponible.",
     RiderText.ConfirmDeposit to "Confirmer depot",
+    RiderText.HistoryFilterAll to "Tout",
+    RiderText.HistoryFilterCompleted to "Terminees",
+    RiderText.HistoryFilterProblems to "Problemes",
+    RiderText.HistoryFilterCancelled to "Annulees",
+    RiderText.HistoryLocalDemo to "Historique local/demo affiche jusqu'a la connexion serveur.",
+    RiderText.HistoryEmpty to "Aucun historique pour ce filtre.",
+    RiderText.CompletionTime to "Heure de fin",
+    RiderText.IssueStatus to "Statut incident",
 )

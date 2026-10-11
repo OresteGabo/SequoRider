@@ -292,7 +292,14 @@ fun SequoRiderShell(
                             },
                             modifier = Modifier.fillMaxSize(),
                         )
-                        RiderSection.History -> HistoryScreen(missions = missions, modifier = Modifier.fillMaxSize())
+                        RiderSection.History -> HistoryScreen(
+                            missions = missions,
+                            isLoading = missionsLoading,
+                            isOffline = missionsOffline,
+                            onRefresh = { refreshMissions() },
+                            onRetry = { refreshMissions() },
+                            modifier = Modifier.fillMaxSize(),
+                        )
                         RiderSection.Payout -> PayoutScreen(profile = profile, summary = payoutSummary, modifier = Modifier.fillMaxSize())
                         RiderSection.Account -> AccountSettingsScreen(
                             profile = profile,
