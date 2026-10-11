@@ -20,7 +20,6 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -35,28 +34,34 @@ class RiderMissionApiClient(
     private val httpClient: HttpClient = createMissionHttpClient(),
 ) {
     suspend fun listMissions(courierId: String? = null, status: MissionStatus? = null): List<RiderMission> =
-        httpClient.get(apiUrl("delivery/missions")) {
+        httpClient.get(apiUrl("rider/missions")) {
             bearer()
-            courierId?.let { parameter("courierId", it) }
-            status?.let { parameter("status", it.name) }
-        }.body<List<DeliveryMissionDto>>().map { it.toModel() }
+        }.body<List<DeliveryMissionDto>>()
+            .map { it.toModel() }
+            .filter { status == null || it.status == status }
 
     suspend fun getMission(missionId: String): RiderMission =
-        httpClient.get(apiUrl("delivery/missions/$missionId")) {
+        httpClient.get(apiUrl("rider/missions/$missionId")) {
             bearer()
         }.body<DeliveryMissionDto>().toModel()
 
     suspend fun acceptMission(missionId: String): RiderMission =
-        httpClient.post(apiUrl("delivery/missions/$missionId/accept")) {
+        httpClient.post(apiUrl("rider/missions/$missionId/accept")) {
             bearer()
             accept(ContentType.Application.Json)
         }.body<DeliveryMissionDto>().toModel()
 
+    suspend fun startPickup(missionId: String): RiderMission =
+        postMissionWithoutBody(missionId, "pickup/start")
+
     suspend fun markPickedUp(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
-        postMission(missionId, "pickup", ProofRequest(proofMetadata = proofMetadata, idempotencyKey = idempotencyKey))
+        postMission(missionId, "pickup/complete", ProofRequest(proofMetadata = proofMetadata, idempotencyKey = idempotencyKey))
+
+    suspend fun startDelivery(missionId: String): RiderMission =
+        postMissionWithoutBody(missionId, "delivery/start")
 
     suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission =
-        postMission(missionId, "deliver", ProofRequest(proofMetadata = proofMetadata, deliveryPin = deliveryPin, idempotencyKey = idempotencyKey))
+        postMission(missionId, "delivery/complete", ProofRequest(proofMetadata = proofMetadata, deliveryPin = deliveryPin, idempotencyKey = idempotencyKey))
 
     suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
         postMission(missionId, "relay-deposit", ProofRequest(proofMetadata = proofMetadata, idempotencyKey = idempotencyKey))
@@ -74,10 +79,16 @@ class RiderMissionApiClient(
     }
 
     private suspend inline fun <reified T : Any> postMission(missionId: String, action: String, body: T?): RiderMission =
-        httpClient.post(apiUrl("delivery/missions/$missionId/$action")) {
+        httpClient.post(apiUrl("rider/missions/$missionId/$action")) {
             bearer()
             accept(ContentType.Application.Json)
             if (body != null) setBody(body)
+        }.body<DeliveryMissionDto>().toModel()
+
+    private suspend fun postMissionWithoutBody(missionId: String, action: String): RiderMission =
+        httpClient.post(apiUrl("rider/missions/$missionId/$action")) {
+            bearer()
+            accept(ContentType.Application.Json)
         }.body<DeliveryMissionDto>().toModel()
 
     private fun io.ktor.client.request.HttpRequestBuilder.bearer() {
@@ -100,8 +111,14 @@ class NetworkRiderMissionRepository(
     override suspend fun acceptMission(missionId: String): RiderMission =
         apiClient.acceptMission(missionId)
 
+    override suspend fun startPickup(missionId: String): RiderMission =
+        apiClient.startPickup(missionId)
+
     override suspend fun markPickedUp(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
         apiClient.markPickedUp(missionId, proofMetadata, idempotencyKey)
+
+    override suspend fun startDelivery(missionId: String): RiderMission =
+        apiClient.startDelivery(missionId)
 
     override suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission =
         apiClient.markDelivered(missionId, proofMetadata, deliveryPin, idempotencyKey)

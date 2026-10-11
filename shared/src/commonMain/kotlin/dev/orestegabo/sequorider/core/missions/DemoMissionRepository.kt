@@ -11,7 +11,9 @@ interface RiderMissionRepository {
     suspend fun listMissions(courierId: String? = null, status: MissionStatus? = null): List<RiderMission>
     suspend fun getMission(missionId: String): RiderMission?
     suspend fun acceptMission(missionId: String): RiderMission
+    suspend fun startPickup(missionId: String): RiderMission
     suspend fun markPickedUp(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission
+    suspend fun startDelivery(missionId: String): RiderMission
     suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission
     suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission
     suspend fun reportProblem(missionId: String, reason: String, idempotencyKey: String?): RiderMission
@@ -35,6 +37,9 @@ open class FakeRiderMissionRepository(
     override suspend fun acceptMission(missionId: String): RiderMission =
         updateMission(missionId) { it.copy(status = MissionStatus.ACCEPTED_BY_COURIER, acceptedAt = "local-demo") }
 
+    override suspend fun startPickup(missionId: String): RiderMission =
+        requireMission(missionId)
+
     override suspend fun markPickedUp(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
         updateMission(missionId) { mission ->
             mission.copy(
@@ -44,6 +49,9 @@ open class FakeRiderMissionRepository(
                 routeStops = mission.routeStops.mapIndexed { index, stop -> if (index == 0) stop.copy(completed = true) else stop },
             )
         }
+
+    override suspend fun startDelivery(missionId: String): RiderMission =
+        requireMission(missionId)
 
     override suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission =
         updateMission(missionId) { mission ->

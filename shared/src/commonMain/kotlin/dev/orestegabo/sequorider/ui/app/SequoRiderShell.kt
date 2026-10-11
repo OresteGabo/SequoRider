@@ -36,6 +36,8 @@ import dev.orestegabo.sequorider.core.auth.rememberAuthDeviceId
 import dev.orestegabo.sequorider.core.auth.rememberAuthSessionStore
 import dev.orestegabo.sequorider.core.auth.rememberSecureTokenStorage
 import dev.orestegabo.sequorider.core.missions.DemoMissionRepository
+import dev.orestegabo.sequorider.core.missions.NetworkRiderMissionRepository
+import dev.orestegabo.sequorider.core.missions.RiderMissionApiClient
 import dev.orestegabo.sequorider.core.payout.DemoPayoutRepository
 import dev.orestegabo.sequorider.feature.auth.RiderAuthScreen
 import dev.orestegabo.sequorider.feature.settings.AccountSettingsScreen
@@ -75,9 +77,20 @@ fun SequoRiderShell(
     }
     val scope = rememberCoroutineScope()
     val sessionRepository = remember { DemoRiderSessionRepository() }
-    val missionRepository = remember { DemoMissionRepository() }
     val payoutRepository = remember { DemoPayoutRepository() }
     val profile = remember { sessionRepository.currentProfile() }
+    var signedInUser by remember { mutableStateOf<CurrentUser?>(null) }
+    var accessToken by remember { mutableStateOf<String?>(null) }
+    var useLocalDemo by remember { mutableStateOf(false) }
+    val missionRepository = remember(signedInUser, accessToken, useLocalDemo) {
+        if (signedInUser != null && !useLocalDemo && !accessToken.isNullOrBlank()) {
+            NetworkRiderMissionRepository(
+                RiderMissionApiClient(accessTokenProvider = { accessToken }),
+            )
+        } else {
+            DemoMissionRepository()
+        }
+    }
     var missions by remember { mutableStateOf(DemoRiderData.missions) }
     var missionsLoading by remember { mutableStateOf(false) }
     var missionsOffline by remember { mutableStateOf(false) }
@@ -85,15 +98,16 @@ fun SequoRiderShell(
     var missionActionFailed by remember { mutableStateOf(false) }
     var selectedMissionId by remember { mutableStateOf<String?>(null) }
     val payoutSummary = remember { payoutRepository.summary() }
-    var signedInUser by remember { mutableStateOf<CurrentUser?>(null) }
-    var useLocalDemo by remember { mutableStateOf(false) }
     var authLoading by remember { mutableStateOf(false) }
     var authError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(authRepository) {
         authLoading = true
         runCatching { authRepository.restoreSavedSession() }
-            .onSuccess { user -> signedInUser = user }
+            .onSuccess { user ->
+                signedInUser = user
+                accessToken = sessionStore.get()?.accessToken
+            }
             .onFailure { error -> authError = userFacingAuthError(error, language) }
         authLoading = false
     }
@@ -124,6 +138,8 @@ fun SequoRiderShell(
                     missions = missions.replaceMission(updated)
                     selectedMissionId = updated.id
                     missionsOffline = false
+                    runCatching { missionRepository.listMissions(profile.riderId) }
+                        .onSuccess { latest -> missions = latest }
                 }
                 .onFailure {
                     missionActionFailed = true
@@ -142,6 +158,8 @@ fun SequoRiderShell(
                     missions = missions.replaceMission(updated)
                     selectedMissionId = updated.id
                     missionsOffline = false
+                    runCatching { missionRepository.listMissions(profile.riderId) }
+                        .onSuccess { latest -> missions = latest }
                 }
                 .onFailure {
                     missionActionFailed = true
@@ -177,7 +195,10 @@ fun SequoRiderShell(
                             when (val result = runCatching { onGoogleSignIn() }.getOrElse { GoogleSignInResult.Failure(GoogleSignInFailureReason.Failed) }) {
                                 is GoogleSignInResult.Success -> {
                                     runCatching { authRepository.loginWithGoogle(result.idToken) }
-                                        .onSuccess { user -> signedInUser = user }
+                                        .onSuccess { user ->
+                                            signedInUser = user
+                                            accessToken = sessionStore.get()?.accessToken
+                                        }
                                         .onFailure { error -> authError = userFacingAuthError(error, language) }
                                 }
                                 GoogleSignInResult.Cancelled -> Unit
@@ -217,6 +238,7 @@ fun SequoRiderShell(
                                         authRepository.logout()
                                         onGoogleSignOut()
                                         signedInUser = null
+                                        accessToken = null
                                         currentSection = RiderSection.Missions
                                     }
                                 },
@@ -257,6 +279,11 @@ fun SequoRiderShell(
                             mission = missions.firstOrNull { it.id == selectedMissionId } ?: missions.firstOrNull(),
                             actionInProgress = missionActionInProgressId != null,
                             actionFailed = missionActionFailed,
+                            onStartPickup = { mission ->
+                                updateMissionAction(mission) {
+                                    missionRepository.startPickup(mission.id)
+                                }
+                            },
                             onMarkPickupDone = { mission, custodyNote ->
                                 updateMissionAction(mission) {
                                     missionRepository.markPickedUp(
@@ -264,6 +291,11 @@ fun SequoRiderShell(
                                         proofMetadata = custodyNote.ifBlank { "seller-pickup-confirmed" },
                                         idempotencyKey = mission.idempotencyKey("pickup"),
                                     )
+                                }
+                            },
+                            onStartDelivery = { mission ->
+                                updateMissionAction(mission) {
+                                    missionRepository.startDelivery(mission.id)
                                 }
                             },
                             onConfirmDelivery = { mission, deliveryPin, deliveryNote ->

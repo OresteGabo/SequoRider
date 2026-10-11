@@ -43,7 +43,9 @@ fun ActiveRouteScreen(
     mission: RiderMission?,
     actionInProgress: Boolean,
     actionFailed: Boolean,
+    onStartPickup: (RiderMission) -> Unit,
     onMarkPickupDone: (RiderMission, String) -> Unit,
+    onStartDelivery: (RiderMission) -> Unit,
     onConfirmDelivery: (RiderMission, String, String) -> Unit,
     onConfirmRelayDeposit: (RiderMission, String, String) -> Unit,
     onReportProblem: (RiderMission, String) -> Unit,
@@ -288,7 +290,11 @@ fun ActiveRouteScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = {}, modifier = Modifier.weight(1f), enabled = false) {
+                    OutlinedButton(
+                        onClick = { onStartPickup(mission) },
+                        modifier = Modifier.weight(1f),
+                        enabled = !actionInProgress && mission.status == MissionStatus.ACCEPTED_BY_COURIER,
+                    ) {
                         Text(appText(RiderText.StartPickup))
                     }
                     Button(
@@ -300,7 +306,11 @@ fun ActiveRouteScreen(
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = {}, modifier = Modifier.weight(1f), enabled = false) {
+                    OutlinedButton(
+                        onClick = { onStartDelivery(mission) },
+                        modifier = Modifier.weight(1f),
+                        enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER,
+                    ) {
                         Text(appText(RiderText.StartDelivery))
                     }
                     Button(
