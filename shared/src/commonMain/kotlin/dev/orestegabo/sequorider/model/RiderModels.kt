@@ -103,6 +103,7 @@ data class RiderMission(
     val customerDeliveryFeeCfa: Int,
     val shortfallCfa: Int,
     val slaLabel: String,
+    val customerDeliveryNote: String? = null,
     val assignedAt: String? = null,
     val acceptedAt: String? = null,
     val pickupAt: String? = null,
@@ -202,6 +203,7 @@ object DemoRiderData {
             customerDeliveryFeeCfa = 400,
             shortfallCfa = 250,
             slaLabel = "Hot food priority",
+            customerDeliveryNote = "Call from the gate before handoff.",
         ),
         RiderMission(
             id = "mission-1002",
@@ -226,6 +228,7 @@ object DemoRiderData {
             customerDeliveryFeeCfa = 700,
             shortfallCfa = 200,
             slaLabel = "Grouped pickup",
+            customerDeliveryNote = "Customer prefers one consolidated package.",
         ),
     )
 

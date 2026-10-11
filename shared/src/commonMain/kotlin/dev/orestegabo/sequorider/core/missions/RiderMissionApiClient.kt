@@ -182,6 +182,7 @@ private data class DeliveryMissionDto(
             customerDeliveryFeeCfa = customerDeliveryFeeCfa,
             shortfallCfa = shortfallCfa,
             slaLabel = status.name,
+            customerDeliveryNote = null,
             assignedAt = assignedAt,
             acceptedAt = acceptedAt,
             pickupAt = pickupAt,

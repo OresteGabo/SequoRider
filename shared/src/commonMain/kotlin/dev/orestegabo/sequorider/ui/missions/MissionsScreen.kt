@@ -40,7 +40,7 @@ fun MissionsScreen(
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
     onAcceptMission: (RiderMission) -> Unit,
-    onRouteClick: () -> Unit,
+    onRouteClick: (RiderMission) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val activeOffers = missions.count { it.status == MissionStatus.OFFERED_TO_COURIER }
@@ -120,7 +120,7 @@ private fun MissionCard(
     mission: RiderMission,
     actionInProgress: Boolean,
     onAcceptMission: (RiderMission) -> Unit,
-    onRouteClick: () -> Unit,
+    onRouteClick: (RiderMission) -> Unit,
 ) {
     RiderCard {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -155,7 +155,7 @@ private fun MissionCard(
                         Text(appText(RiderText.AcceptMission))
                     }
                 } else {
-                    Button(onClick = onRouteClick, enabled = !actionInProgress, modifier = Modifier.weight(1f)) {
+                    Button(onClick = { onRouteClick(mission) }, enabled = !actionInProgress, modifier = Modifier.weight(1f)) {
                         Text(appText(RiderText.ViewRoute))
                     }
                 }

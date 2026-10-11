@@ -33,16 +33,37 @@ open class FakeRiderMissionRepository(
         missionState.firstOrNull { it.id == missionId }
 
     override suspend fun acceptMission(missionId: String): RiderMission =
-        updateMission(missionId) { it.copy(status = MissionStatus.ACCEPTED_BY_COURIER) }
+        updateMission(missionId) { it.copy(status = MissionStatus.ACCEPTED_BY_COURIER, acceptedAt = "local-demo") }
 
     override suspend fun markPickedUp(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
-        updateMission(missionId) { it.copy(status = MissionStatus.PICKED_UP_FROM_SELLER) }
+        updateMission(missionId) { mission ->
+            mission.copy(
+                status = MissionStatus.PICKED_UP_FROM_SELLER,
+                pickupAt = "local-demo",
+                pickupStops = mission.pickupStops.map { it.copy(completed = true) },
+                routeStops = mission.routeStops.mapIndexed { index, stop -> if (index == 0) stop.copy(completed = true) else stop },
+            )
+        }
 
     override suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission =
-        updateMission(missionId) { it.copy(status = MissionStatus.DELIVERED_TO_CUSTOMER) }
+        updateMission(missionId) { mission ->
+            mission.copy(
+                status = MissionStatus.DELIVERED_TO_CUSTOMER,
+                deliveredAt = "local-demo",
+                dropoffStop = mission.dropoffStop.copy(completed = true),
+                routeStops = mission.routeStops.mapIndexed { index, stop -> if (index == mission.routeStops.lastIndex) stop.copy(completed = true) else stop },
+            )
+        }
 
     override suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
-        updateMission(missionId) { it.copy(status = MissionStatus.DEPOSITED_AT_RELAY) }
+        updateMission(missionId) { mission ->
+            mission.copy(
+                status = MissionStatus.DEPOSITED_AT_RELAY,
+                relayDepositedAt = "local-demo",
+                dropoffStop = mission.dropoffStop.copy(completed = true),
+                routeStops = mission.routeStops.mapIndexed { index, stop -> if (index == mission.routeStops.lastIndex) stop.copy(completed = true) else stop },
+            )
+        }
 
     override suspend fun reportProblem(missionId: String, reason: String, idempotencyKey: String?): RiderMission =
         updateMission(missionId) { it.copy(status = MissionStatus.PROBLEM_REPORTED, problemMetadata = reason) }

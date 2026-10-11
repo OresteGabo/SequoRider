@@ -83,7 +83,7 @@ fun SequoRiderShell(
     var missionsOffline by remember { mutableStateOf(false) }
     var missionActionInProgressId by remember { mutableStateOf<String?>(null) }
     var missionActionFailed by remember { mutableStateOf(false) }
-    val routePlan = remember { missionRepository.activeRoute() }
+    var selectedMissionId by remember { mutableStateOf<String?>(null) }
     val payoutSummary = remember { payoutRepository.summary() }
     var signedInUser by remember { mutableStateOf<CurrentUser?>(null) }
     var useLocalDemo by remember { mutableStateOf(false) }
@@ -121,7 +121,26 @@ fun SequoRiderShell(
             missionActionFailed = false
             runCatching { missionRepository.acceptMission(mission.id) }
                 .onSuccess { updated ->
-                    missions = missions.map { if (it.id == updated.id) updated else it }
+                    missions = missions.replaceMission(updated)
+                    selectedMissionId = updated.id
+                    missionsOffline = false
+                }
+                .onFailure {
+                    missionActionFailed = true
+                }
+            missionActionInProgressId = null
+        }
+    }
+
+    fun updateMissionAction(mission: RiderMission, action: suspend () -> RiderMission) {
+        if (missionActionInProgressId != null) return
+        scope.launch {
+            missionActionInProgressId = mission.id
+            missionActionFailed = false
+            runCatching { action() }
+                .onSuccess { updated ->
+                    missions = missions.replaceMission(updated)
+                    selectedMissionId = updated.id
                     missionsOffline = false
                 }
                 .onFailure {
@@ -228,10 +247,38 @@ fun SequoRiderShell(
                             onRefresh = { refreshMissions() },
                             onRetry = { refreshMissions() },
                             onAcceptMission = ::acceptMission,
-                            onRouteClick = { currentSection = RiderSection.ActiveRoute },
+                            onRouteClick = { mission ->
+                                selectedMissionId = mission.id
+                                currentSection = RiderSection.ActiveRoute
+                            },
                             modifier = Modifier.fillMaxSize(),
                         )
-                        RiderSection.ActiveRoute -> ActiveRouteScreen(routePlan = routePlan, modifier = Modifier.fillMaxSize())
+                        RiderSection.ActiveRoute -> ActiveRouteScreen(
+                            mission = missions.firstOrNull { it.id == selectedMissionId } ?: missions.firstOrNull(),
+                            actionInProgress = missionActionInProgressId != null,
+                            actionFailed = missionActionFailed,
+                            onMarkPickupDone = { mission ->
+                                updateMissionAction(mission) {
+                                    missionRepository.markPickedUp(mission.id, proofMetadata = "seller-pickup-proof-pending", idempotencyKey = mission.idempotencyKey("pickup"))
+                                }
+                            },
+                            onConfirmDelivery = { mission ->
+                                updateMissionAction(mission) {
+                                    missionRepository.markDelivered(mission.id, proofMetadata = "customer-delivery-proof-pending", deliveryPin = null, idempotencyKey = mission.idempotencyKey("deliver"))
+                                }
+                            },
+                            onConfirmRelayDeposit = { mission ->
+                                updateMissionAction(mission) {
+                                    missionRepository.depositAtRelay(mission.id, proofMetadata = "relay-deposit-proof-pending", idempotencyKey = mission.idempotencyKey("relay-deposit"))
+                                }
+                            },
+                            onReportProblem = { mission ->
+                                updateMissionAction(mission) {
+                                    missionRepository.reportProblem(mission.id, reason = "Rider reported an issue from mission detail.", idempotencyKey = mission.idempotencyKey("problem"))
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize(),
+                        )
                         RiderSection.History -> HistoryScreen(missions = missions, modifier = Modifier.fillMaxSize())
                         RiderSection.Payout -> PayoutScreen(profile = profile, summary = payoutSummary, modifier = Modifier.fillMaxSize())
                         RiderSection.Account -> AccountSettingsScreen(
@@ -246,6 +293,12 @@ fun SequoRiderShell(
         }
     }
 }
+
+private fun List<RiderMission>.replaceMission(updated: RiderMission): List<RiderMission> =
+    map { mission -> if (mission.id == updated.id) updated else mission }
+
+private fun RiderMission.idempotencyKey(action: String): String =
+    "$id-$action-${updatedAt ?: status.name}"
 
 private fun userFacingAuthError(error: Throwable, language: AppLanguage): String =
     when ((error as? AuthApiException)?.userMessage) {
