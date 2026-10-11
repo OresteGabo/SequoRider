@@ -161,6 +161,15 @@ enum class RiderText {
     HistoryEmpty,
     CompletionTime,
     IssueStatus,
+    CurrentPeriodEarnings,
+    CompletedDeliveries,
+    PendingPayout,
+    HeldProblemPayout,
+    PayoutMethod,
+    PayoutStatus,
+    SalaryHandledOutsideSplits,
+    PayoutLocalDemo,
+    NoPayoutExecution,
 }
 
 @Composable
@@ -323,6 +332,15 @@ private val englishText = mapOf(
     RiderText.HistoryEmpty to "No history for this filter.",
     RiderText.CompletionTime to "Completion time",
     RiderText.IssueStatus to "Issue status",
+    RiderText.CurrentPeriodEarnings to "Current period earnings",
+    RiderText.CompletedDeliveries to "Completed deliveries",
+    RiderText.PendingPayout to "Pending payout",
+    RiderText.HeldProblemPayout to "Held/problem payout",
+    RiderText.PayoutMethod to "Payout method",
+    RiderText.PayoutStatus to "Payout status",
+    RiderText.SalaryHandledOutsideSplits to "Salary is handled outside delivery splits.",
+    RiderText.PayoutLocalDemo to "Local/demo payout preview until a rider payout endpoint is available.",
+    RiderText.NoPayoutExecution to "No payout execution is available in this app.",
 )
 
 private val frenchText = mapOf(
@@ -476,4 +494,13 @@ private val frenchText = mapOf(
     RiderText.HistoryEmpty to "Aucun historique pour ce filtre.",
     RiderText.CompletionTime to "Heure de fin",
     RiderText.IssueStatus to "Statut incident",
+    RiderText.CurrentPeriodEarnings to "Gains periode en cours",
+    RiderText.CompletedDeliveries to "Livraisons terminees",
+    RiderText.PendingPayout to "Paiement en attente",
+    RiderText.HeldProblemPayout to "Paiement bloque/probleme",
+    RiderText.PayoutMethod to "Methode paiement",
+    RiderText.PayoutStatus to "Statut paiement",
+    RiderText.SalaryHandledOutsideSplits to "Le salaire est gere hors repartitions de livraison.",
+    RiderText.PayoutLocalDemo to "Apercu paiement local/demo jusqu'a disponibilite endpoint coursier.",
+    RiderText.NoPayoutExecution to "Aucune execution de paiement n'est disponible dans cette app.",
 )

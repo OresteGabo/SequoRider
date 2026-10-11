@@ -300,7 +300,7 @@ fun SequoRiderShell(
                             onRetry = { refreshMissions() },
                             modifier = Modifier.fillMaxSize(),
                         )
-                        RiderSection.Payout -> PayoutScreen(profile = profile, summary = payoutSummary, modifier = Modifier.fillMaxSize())
+                        RiderSection.Payout -> PayoutScreen(profile = profile, summary = payoutSummary, missions = missions, modifier = Modifier.fillMaxSize())
                         RiderSection.Account -> AccountSettingsScreen(
                             profile = profile,
                             language = language,
