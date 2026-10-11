@@ -29,7 +29,7 @@ fun MissionsScreen(
     onRouteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val activeOffers = missions.count { it.status == MissionStatus.Offered }
+    val activeOffers = missions.count { it.status == MissionStatus.OFFERED_TO_COURIER }
     LazyColumn(
         modifier = modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),

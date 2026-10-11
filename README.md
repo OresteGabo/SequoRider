@@ -204,6 +204,29 @@ dev.orestegabo.sequorider
 
 ## Build Commands
 
+## Current Rider API Boundaries
+
+Implemented repository boundary:
+
+- `GET /api/delivery/missions` with optional `courierId` and `status`.
+- `GET /api/delivery/missions/{missionId}`.
+- `POST /api/delivery/missions/{missionId}/accept`.
+- `POST /api/delivery/missions/{missionId}/pickup` with `proofMetadata?` and `idempotencyKey?`.
+- `POST /api/delivery/missions/{missionId}/deliver` with `proofMetadata?`, `deliveryPin?`, and `idempotencyKey?`.
+- `POST /api/delivery/missions/{missionId}/relay-deposit` with `proofMetadata?` and `idempotencyKey?`.
+- `POST /api/delivery/missions/{missionId}/problem` with `reason` and `idempotencyKey?`.
+- `GET /api/delivery/missions/couriers/{courierId}/availability` exists, but the current API marks it admin-only.
+
+The app also keeps a `FakeRiderMissionRepository` for previews, offline development, and local demo mode.
+
+Missing or not mobile-ready for a complete rider UI:
+
+- A courier-owned availability endpoint for the signed-in rider. The current availability read route is admin-only.
+- Rich mission mobile detail fields: pickup merchant name/address, customer or relay drop-off display address, masked contact handles, package count/weight, SLA deadline, route distance/ETA, and navigation handoff data.
+- Structured route stop list from the backend. Current mission snapshots expose lifecycle fields but not pickup/drop-off stop instructions.
+- Proof policy metadata describing whether PIN, photo, signature, relay identity, or other proof is required for each mission.
+- Courier offer rejection/timeout endpoints are not exposed as rider-mobile routes yet.
+
 Android debug build:
 
 ```bash

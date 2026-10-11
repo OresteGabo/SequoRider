@@ -21,23 +21,42 @@ enum class RiderAvailability {
 }
 
 enum class MissionStatus {
-    Offered,
-    Accepted,
-    EnRoutePickup,
-    ArrivedPickup,
-    PickedUp,
-    EnRouteDropoff,
-    Delivered,
-    Failed,
-    Returned,
+    CREATED,
+    OFFERED_TO_COURIER,
+    ACCEPTED_BY_COURIER,
+    PICKED_UP_FROM_SELLER,
+    DEPOSITED_AT_RELAY,
+    DELIVERED_TO_CUSTOMER,
+    RELEASED_BY_RELAY,
+    PROBLEM_REPORTED,
+    CANCELLED,
 }
 
 enum class MissionServiceType {
-    SubscriberStandard,
-    ExpressFood,
-    CooperativeMarket,
-    Standard,
-    Return,
+    STANDARD,
+    EXPRESS,
+    PROGRAMMED,
+    CLICK_COLLECT,
+    RELAY,
+}
+
+enum class MissionDestinationType {
+    CUSTOMER_ADDRESS,
+    RELAY_POINT,
+    SEQUO_CONSOLIDATION,
+}
+
+enum class ProofRequirement {
+    SELLER_PICKUP_PROOF,
+    CUSTOMER_DELIVERY_PROOF,
+    DELIVERY_PIN,
+    RELAY_DEPOSIT_PROOF,
+    PROBLEM_REASON,
+}
+
+enum class CourierAvailabilityStatus {
+    ACTIVE,
+    PAUSED,
 }
 
 enum class PayoutStatus {
@@ -64,8 +83,16 @@ data class RiderProfile(
 data class RiderMission(
     val id: String,
     val code: String,
+    val orderId: String,
+    val merchantSubOrderId: String?,
+    val courierId: String?,
     val serviceType: MissionServiceType,
+    val destinationType: MissionDestinationType,
     val status: MissionStatus,
+    val pickupStops: List<PickupStop>,
+    val dropoffStop: DropoffStop,
+    val routeStops: List<RouteStop>,
+    val proofRequirements: List<ProofRequirement>,
     val pickupName: String,
     val pickupArea: String,
     val dropoffArea: String,
@@ -73,7 +100,33 @@ data class RiderMission(
     val distanceKm: String,
     val etaMinutes: Int,
     val expectedPayoutCfa: Int?,
+    val customerDeliveryFeeCfa: Int,
+    val shortfallCfa: Int,
     val slaLabel: String,
+    val assignedAt: String? = null,
+    val acceptedAt: String? = null,
+    val pickupAt: String? = null,
+    val relayDepositedAt: String? = null,
+    val deliveredAt: String? = null,
+    val problemMetadata: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+)
+
+data class PickupStop(
+    val id: String,
+    val title: String,
+    val area: String,
+    val merchantSubOrderId: String?,
+    val completed: Boolean,
+)
+
+data class DropoffStop(
+    val id: String,
+    val destinationType: MissionDestinationType,
+    val title: String,
+    val area: String,
+    val completed: Boolean,
 )
 
 data class RouteStop(
@@ -82,6 +135,17 @@ data class RouteStop(
     val area: String,
     val detail: String,
     val completed: Boolean,
+)
+
+data class CourierAvailabilityState(
+    val courierId: String,
+    val status: CourierAvailabilityStatus,
+    val paused: Boolean,
+    val pausedReason: String?,
+    val pausedBy: String?,
+    val pausedAt: String?,
+    val pausedUntil: String?,
+    val updatedAt: String?,
 )
 
 data class RiderRoutePlan(
@@ -118,8 +182,16 @@ object DemoRiderData {
         RiderMission(
             id = "mission-1001",
             code = "SR-1001",
-            serviceType = MissionServiceType.ExpressFood,
-            status = MissionStatus.Offered,
+            orderId = "order-1001",
+            merchantSubOrderId = "sub-order-1001",
+            courierId = "demo-rider",
+            serviceType = MissionServiceType.EXPRESS,
+            destinationType = MissionDestinationType.CUSTOMER_ADDRESS,
+            status = MissionStatus.OFFERED_TO_COURIER,
+            pickupStops = listOf(PickupStop("pickup-1001", "Akif Burger", "Agoe", "sub-order-1001", completed = false)),
+            dropoffStop = DropoffStop("dropoff-1001", MissionDestinationType.CUSTOMER_ADDRESS, "Customer handoff", "Tokoin", completed = false),
+            routeStops = emptyList(),
+            proofRequirements = listOf(ProofRequirement.SELLER_PICKUP_PROOF, ProofRequirement.CUSTOMER_DELIVERY_PROOF, ProofRequirement.DELIVERY_PIN),
             pickupName = "Akif Burger",
             pickupArea = "Agoe",
             dropoffArea = "Tokoin",
@@ -127,13 +199,23 @@ object DemoRiderData {
             distanceKm = "4.8 km",
             etaMinutes = 18,
             expectedPayoutCfa = 650,
+            customerDeliveryFeeCfa = 400,
+            shortfallCfa = 250,
             slaLabel = "Hot food priority",
         ),
         RiderMission(
             id = "mission-1002",
             code = "SR-1002",
-            serviceType = MissionServiceType.CooperativeMarket,
-            status = MissionStatus.Accepted,
+            orderId = "order-1002",
+            merchantSubOrderId = "sub-order-1002",
+            courierId = "demo-rider",
+            serviceType = MissionServiceType.STANDARD,
+            destinationType = MissionDestinationType.CUSTOMER_ADDRESS,
+            status = MissionStatus.ACCEPTED_BY_COURIER,
+            pickupStops = listOf(PickupStop("pickup-1002", "Marche de Mulhouse", "Assigame", "sub-order-1002", completed = false)),
+            dropoffStop = DropoffStop("dropoff-1002", MissionDestinationType.CUSTOMER_ADDRESS, "Customer handoff", "Be", completed = false),
+            routeStops = emptyList(),
+            proofRequirements = listOf(ProofRequirement.SELLER_PICKUP_PROOF, ProofRequirement.CUSTOMER_DELIVERY_PROOF),
             pickupName = "Marche de Mulhouse",
             pickupArea = "Assigame",
             dropoffArea = "Be",
@@ -141,6 +223,8 @@ object DemoRiderData {
             distanceKm = "6.2 km",
             etaMinutes = 28,
             expectedPayoutCfa = 900,
+            customerDeliveryFeeCfa = 700,
+            shortfallCfa = 200,
             slaLabel = "Grouped pickup",
         ),
     )

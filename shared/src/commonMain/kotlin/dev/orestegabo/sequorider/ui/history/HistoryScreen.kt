@@ -32,9 +32,9 @@ fun HistoryScreen(
         item {
             RiderCard {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    RiderKeyValueRow(appText(RiderText.Delivered), missions.count { it.status == MissionStatus.Delivered }.toString())
-                    RiderKeyValueRow(appText(RiderText.Failed), missions.count { it.status == MissionStatus.Failed }.toString())
-                    RiderKeyValueRow(appText(RiderText.Returned), missions.count { it.status == MissionStatus.Returned }.toString())
+                    RiderKeyValueRow(appText(RiderText.Delivered), missions.count { it.status == MissionStatus.DELIVERED_TO_CUSTOMER || it.status == MissionStatus.RELEASED_BY_RELAY }.toString())
+                    RiderKeyValueRow(appText(RiderText.Failed), missions.count { it.status == MissionStatus.PROBLEM_REPORTED || it.status == MissionStatus.CANCELLED }.toString())
+                    RiderKeyValueRow(appText(RiderText.Returned), "0")
                 }
             }
         }

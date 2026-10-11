@@ -43,6 +43,7 @@ import dev.orestegabo.sequorider.feature.settings.AppLanguage
 import dev.orestegabo.sequorider.feature.settings.LocalAppLanguage
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
+import dev.orestegabo.sequorider.model.DemoRiderData
 import dev.orestegabo.sequorider.model.RiderSection
 import dev.orestegabo.sequorider.ui.chrome.RiderBottomBar
 import dev.orestegabo.sequorider.ui.chrome.label
@@ -76,7 +77,7 @@ fun SequoRiderShell(
     val missionRepository = remember { DemoMissionRepository() }
     val payoutRepository = remember { DemoPayoutRepository() }
     val profile = remember { sessionRepository.currentProfile() }
-    val missions = remember { missionRepository.missions() }
+    val missions = remember { DemoRiderData.missions }
     val routePlan = remember { missionRepository.activeRoute() }
     val payoutSummary = remember { payoutRepository.summary() }
     var signedInUser by remember { mutableStateOf<CurrentUser?>(null) }
