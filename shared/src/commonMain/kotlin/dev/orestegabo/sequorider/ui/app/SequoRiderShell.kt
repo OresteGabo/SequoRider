@@ -266,14 +266,23 @@ fun SequoRiderShell(
                                     )
                                 }
                             },
-                            onConfirmDelivery = { mission ->
+                            onConfirmDelivery = { mission, deliveryPin, deliveryNote ->
                                 updateMissionAction(mission) {
-                                    missionRepository.markDelivered(mission.id, proofMetadata = "customer-delivery-proof-pending", deliveryPin = null, idempotencyKey = mission.idempotencyKey("deliver"))
+                                    missionRepository.markDelivered(
+                                        mission.id,
+                                        proofMetadata = deliveryNote.ifBlank { "customer-delivery-confirmed" },
+                                        deliveryPin = deliveryPin.ifBlank { null },
+                                        idempotencyKey = mission.idempotencyKey("deliver"),
+                                    )
                                 }
                             },
-                            onConfirmRelayDeposit = { mission ->
+                            onConfirmRelayDeposit = { mission, packageCode, lockerSlot ->
                                 updateMissionAction(mission) {
-                                    missionRepository.depositAtRelay(mission.id, proofMetadata = "relay-deposit-proof-pending", idempotencyKey = mission.idempotencyKey("relay-deposit"))
+                                    val metadata = listOfNotNull(
+                                        packageCode.takeIf { it.isNotBlank() }?.let { "package=$it" },
+                                        lockerSlot.takeIf { it.isNotBlank() }?.let { "slot=$it" },
+                                    ).joinToString("; ").ifBlank { "relay-deposit-confirmed" }
+                                    missionRepository.depositAtRelay(mission.id, proofMetadata = metadata, idempotencyKey = mission.idempotencyKey("relay-deposit"))
                                 }
                             },
                             onReportProblem = { mission, reason ->

@@ -44,8 +44,8 @@ fun ActiveRouteScreen(
     actionInProgress: Boolean,
     actionFailed: Boolean,
     onMarkPickupDone: (RiderMission, String) -> Unit,
-    onConfirmDelivery: (RiderMission) -> Unit,
-    onConfirmRelayDeposit: (RiderMission) -> Unit,
+    onConfirmDelivery: (RiderMission, String, String) -> Unit,
+    onConfirmRelayDeposit: (RiderMission, String, String) -> Unit,
     onReportProblem: (RiderMission, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -53,6 +53,11 @@ fun ActiveRouteScreen(
     var cannotPickupDialogOpen by remember(mission?.id) { mutableStateOf(false) }
     var cannotPickupReason by remember(mission?.id) { mutableStateOf("") }
     var cannotPickupReasonTouched by remember(mission?.id) { mutableStateOf(false) }
+    var deliveryPin by remember(mission?.id) { mutableStateOf("") }
+    var deliveryProblemReason by remember(mission?.id) { mutableStateOf("") }
+    var deliveryProblemTouched by remember(mission?.id) { mutableStateOf(false) }
+    var packageCode by remember(mission?.id) { mutableStateOf("") }
+    var lockerSlot by remember(mission?.id) { mutableStateOf("") }
 
     if (mission != null && cannotPickupDialogOpen) {
         CannotPickupDialog(
@@ -76,7 +81,7 @@ fun ActiveRouteScreen(
         )
     }
 
-    val deliveryProblemReason = appText(RiderText.ReportDeliveryProblem)
+    val genericDeliveryProblemReason = appText(RiderText.ReportDeliveryProblem)
 
     LazyColumn(
         modifier = modifier.padding(horizontal = 16.dp),
@@ -125,6 +130,42 @@ fun ActiveRouteScreen(
                     RiderKeyValueRow(appText(RiderText.Distance), mission.distanceKm.ifBlank { appText(RiderText.NotAvailableYet) })
                     RiderKeyValueRow(appText(RiderText.PayoutPreview), mission.expectedPayoutCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
                 }
+            }
+        }
+
+        if (mission.destinationType == MissionDestinationType.CUSTOMER_ADDRESS) {
+            item {
+                HomeDeliveryPanel(
+                    mission = mission,
+                    deliveryPin = deliveryPin,
+                    deliveryProblemReason = deliveryProblemReason,
+                    deliveryProblemTouched = deliveryProblemTouched,
+                    actionInProgress = actionInProgress,
+                    onDeliveryPinChange = { deliveryPin = sanitizeCode(it, MaxDeliveryPinLength) },
+                    onDeliveryProblemReasonChange = {
+                        deliveryProblemReason = sanitizePickupText(it, MaxPickupReasonLength)
+                        deliveryProblemTouched = true
+                    },
+                    onConfirmDelivery = { onConfirmDelivery(mission, deliveryPin, deliveryProblemReason) },
+                    onCustomerUnavailable = {
+                        deliveryProblemTouched = true
+                        if (deliveryProblemReason.isNotBlank()) {
+                            onReportProblem(mission, deliveryProblemReason)
+                        }
+                    },
+                )
+            }
+        } else {
+            item {
+                RelayDepositPanel(
+                    mission = mission,
+                    packageCode = packageCode,
+                    lockerSlot = lockerSlot,
+                    actionInProgress = actionInProgress,
+                    onPackageCodeChange = { packageCode = sanitizePackageCode(it) },
+                    onLockerSlotChange = { lockerSlot = sanitizePickupText(it, MaxLockerSlotLength) },
+                    onConfirmRelayDeposit = { onConfirmRelayDeposit(mission, packageCode, lockerSlot) },
+                )
             }
         }
 
@@ -265,12 +306,12 @@ fun ActiveRouteScreen(
                     Button(
                         onClick = {
                             if (mission.destinationType == MissionDestinationType.RELAY_POINT) {
-                                onConfirmRelayDeposit(mission)
+                                onConfirmRelayDeposit(mission, packageCode, lockerSlot)
                             } else {
-                                onConfirmDelivery(mission)
+                                onConfirmDelivery(mission, deliveryPin, deliveryProblemReason)
                             }
                         },
-                        enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER,
+                        enabled = !actionInProgress && mission.canConfirmDropoff(deliveryPin),
                         modifier = Modifier.weight(1f),
                     ) {
                         Text(if (mission.destinationType == MissionDestinationType.RELAY_POINT) appText(RiderText.ConfirmRelayDeposit) else appText(RiderText.ConfirmDelivery))
@@ -281,7 +322,7 @@ fun ActiveRouteScreen(
                         if (mission.status == MissionStatus.ACCEPTED_BY_COURIER) {
                             cannotPickupDialogOpen = true
                         } else {
-                            onReportProblem(mission, deliveryProblemReason)
+                            onReportProblem(mission, genericDeliveryProblemReason)
                         }
                     },
                     enabled = !actionInProgress && mission.status in problemReportableStatuses,
@@ -290,6 +331,126 @@ fun ActiveRouteScreen(
                     Text(if (mission.status == MissionStatus.ACCEPTED_BY_COURIER) appText(RiderText.ReportPickupProblem) else appText(RiderText.ReportDeliveryProblem))
                 }
                 Text(appText(RiderText.ActionRequiresEndpoint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeDeliveryPanel(
+    mission: RiderMission,
+    deliveryPin: String,
+    deliveryProblemReason: String,
+    deliveryProblemTouched: Boolean,
+    actionInProgress: Boolean,
+    onDeliveryPinChange: (String) -> Unit,
+    onDeliveryProblemReasonChange: (String) -> Unit,
+    onConfirmDelivery: () -> Unit,
+    onCustomerUnavailable: () -> Unit,
+) {
+    val pinRequired = ProofRequirement.DELIVERY_PIN in mission.proofRequirements
+    RiderCard {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(appText(RiderText.HomeDelivery), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            if (pinRequired) {
+                OutlinedTextField(
+                    value = deliveryPin,
+                    onValueChange = onDeliveryPinChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(appText(RiderText.DeliveryPin)) },
+                    placeholder = { Text(appText(RiderText.DeliveryPinPlaceholder)) },
+                    supportingText = {
+                        Text(
+                            if (deliveryPin.length in 1 until MaxDeliveryPinLength) {
+                                appText(RiderText.DeliveryPinRequired)
+                            } else {
+                                appText(RiderText.CharacterCount).formatCount(deliveryPin.length, MaxDeliveryPinLength)
+                            },
+                        )
+                    },
+                    isError = deliveryPin.length in 1 until MaxDeliveryPinLength,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    maxLines = 1,
+                )
+            }
+            OutlinedTextField(
+                value = deliveryProblemReason,
+                onValueChange = onDeliveryProblemReasonChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(appText(RiderText.DeliveryProblemReason)) },
+                placeholder = { Text(appText(RiderText.DeliveryProblemReasonPlaceholder)) },
+                supportingText = {
+                    Text(
+                        if (deliveryProblemTouched && deliveryProblemReason.isBlank()) {
+                            appText(RiderText.CannotPickupReasonRequired)
+                        } else {
+                            appText(RiderText.CharacterCount).formatCount(deliveryProblemReason.length, MaxPickupReasonLength)
+                        },
+                    )
+                },
+                isError = deliveryProblemTouched && deliveryProblemReason.isBlank(),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                maxLines = 3,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = onConfirmDelivery,
+                    enabled = !actionInProgress && mission.canConfirmDropoff(deliveryPin),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(appText(RiderText.ConfirmDelivery))
+                }
+                OutlinedButton(
+                    onClick = onCustomerUnavailable,
+                    enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(appText(RiderText.CustomerUnavailable))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RelayDepositPanel(
+    mission: RiderMission,
+    packageCode: String,
+    lockerSlot: String,
+    actionInProgress: Boolean,
+    onPackageCodeChange: (String) -> Unit,
+    onLockerSlotChange: (String) -> Unit,
+    onConfirmRelayDeposit: () -> Unit,
+) {
+    RiderCard {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(appText(RiderText.RelayDeposit), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            RiderKeyValueRow(appText(RiderText.RelayPoint), mission.dropoffStop.title)
+            OutlinedTextField(
+                value = packageCode,
+                onValueChange = onPackageCodeChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(appText(RiderText.PackageCode)) },
+                placeholder = { Text(appText(RiderText.PackageCodePlaceholder)) },
+                supportingText = { Text(appText(RiderText.QrPlaceholder)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                maxLines = 1,
+            )
+            OutlinedTextField(
+                value = lockerSlot,
+                onValueChange = onLockerSlotChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(appText(RiderText.LockerSlot)) },
+                placeholder = { Text(appText(RiderText.LockerSlotPlaceholder)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                maxLines = 1,
+            )
+            Button(
+                onClick = onConfirmRelayDeposit,
+                enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(appText(RiderText.ConfirmDeposit))
             }
         }
     }
@@ -400,6 +561,12 @@ private val problemReportableStatuses = setOf(
     MissionStatus.DEPOSITED_AT_RELAY,
 )
 
+private fun RiderMission.canConfirmDropoff(deliveryPin: String): Boolean =
+    status == MissionStatus.PICKED_UP_FROM_SELLER &&
+        (destinationType != MissionDestinationType.CUSTOMER_ADDRESS ||
+            ProofRequirement.DELIVERY_PIN !in proofRequirements ||
+            deliveryPin.length == MaxDeliveryPinLength)
+
 private fun sanitizePickupText(input: String, maxLength: Int): String =
     input
         .filter { it.isAllowedPickupTextChar() }
@@ -408,8 +575,17 @@ private fun sanitizePickupText(input: String, maxLength: Int): String =
 private fun Char.isAllowedPickupTextChar(): Boolean =
     isLetterOrDigit() || isWhitespace() || this in ".,'!?;:-()/+"
 
+private fun sanitizeCode(input: String, maxLength: Int): String =
+    input.filter(Char::isDigit).take(maxLength)
+
+private fun sanitizePackageCode(input: String): String =
+    input.filter { it.isLetterOrDigit() || it in "-_" }.take(MaxPackageCodeLength)
+
 private fun String.formatCount(count: Int, max: Int): String =
     replace("%1\$s", count.toString()).replace("%2\$s", max.toString())
 
 private const val MaxCustodyNoteLength = 120
 private const val MaxPickupReasonLength = 100
+private const val MaxDeliveryPinLength = 6
+private const val MaxPackageCodeLength = 32
+private const val MaxLockerSlotLength = 24
