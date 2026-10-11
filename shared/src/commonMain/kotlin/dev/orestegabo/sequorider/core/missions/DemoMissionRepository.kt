@@ -20,30 +20,32 @@ interface RiderMissionRepository {
 }
 
 open class FakeRiderMissionRepository(
-    private val missions: List<RiderMission> = DemoRiderData.missions,
+    missions: List<RiderMission> = DemoRiderData.missions,
 ) : RiderMissionRepository {
+    private val missionState = missions.toMutableList()
+
     override suspend fun listMissions(courierId: String?, status: MissionStatus?): List<RiderMission> =
-        missions
+        missionState
             .filter { courierId == null || it.courierId == courierId }
             .filter { status == null || it.status == status }
 
     override suspend fun getMission(missionId: String): RiderMission? =
-        missions.firstOrNull { it.id == missionId }
+        missionState.firstOrNull { it.id == missionId }
 
     override suspend fun acceptMission(missionId: String): RiderMission =
-        requireMission(missionId)
+        updateMission(missionId) { it.copy(status = MissionStatus.ACCEPTED_BY_COURIER) }
 
     override suspend fun markPickedUp(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
-        requireMission(missionId)
+        updateMission(missionId) { it.copy(status = MissionStatus.PICKED_UP_FROM_SELLER) }
 
     override suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission =
-        requireMission(missionId)
+        updateMission(missionId) { it.copy(status = MissionStatus.DELIVERED_TO_CUSTOMER) }
 
     override suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
-        requireMission(missionId)
+        updateMission(missionId) { it.copy(status = MissionStatus.DEPOSITED_AT_RELAY) }
 
     override suspend fun reportProblem(missionId: String, reason: String, idempotencyKey: String?): RiderMission =
-        requireMission(missionId)
+        updateMission(missionId) { it.copy(status = MissionStatus.PROBLEM_REPORTED, problemMetadata = reason) }
 
     override suspend fun courierAvailability(courierId: String): CourierAvailabilityState =
         CourierAvailabilityState(
@@ -60,7 +62,15 @@ open class FakeRiderMissionRepository(
     override fun activeRoute(): RiderRoutePlan = DemoRiderData.routePlan
 
     private fun requireMission(missionId: String): RiderMission =
-        missions.firstOrNull { it.id == missionId } ?: error("Fake mission not found.")
+        missionState.firstOrNull { it.id == missionId } ?: error("Fake mission not found.")
+
+    private fun updateMission(missionId: String, update: (RiderMission) -> RiderMission): RiderMission {
+        val index = missionState.indexOfFirst { it.id == missionId }
+        if (index < 0) error("Fake mission not found.")
+        val updated = update(missionState[index])
+        missionState[index] = updated
+        return updated
+    }
 }
 
 class DemoMissionRepository : FakeRiderMissionRepository()

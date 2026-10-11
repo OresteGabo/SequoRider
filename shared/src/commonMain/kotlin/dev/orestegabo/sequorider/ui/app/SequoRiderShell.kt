@@ -44,6 +44,7 @@ import dev.orestegabo.sequorider.feature.settings.LocalAppLanguage
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.DemoRiderData
+import dev.orestegabo.sequorider.model.RiderMission
 import dev.orestegabo.sequorider.model.RiderSection
 import dev.orestegabo.sequorider.ui.chrome.RiderBottomBar
 import dev.orestegabo.sequorider.ui.chrome.label
@@ -77,7 +78,11 @@ fun SequoRiderShell(
     val missionRepository = remember { DemoMissionRepository() }
     val payoutRepository = remember { DemoPayoutRepository() }
     val profile = remember { sessionRepository.currentProfile() }
-    val missions = remember { DemoRiderData.missions }
+    var missions by remember { mutableStateOf(DemoRiderData.missions) }
+    var missionsLoading by remember { mutableStateOf(false) }
+    var missionsOffline by remember { mutableStateOf(false) }
+    var missionActionInProgressId by remember { mutableStateOf<String?>(null) }
+    var missionActionFailed by remember { mutableStateOf(false) }
     val routePlan = remember { missionRepository.activeRoute() }
     val payoutSummary = remember { payoutRepository.summary() }
     var signedInUser by remember { mutableStateOf<CurrentUser?>(null) }
@@ -91,6 +96,52 @@ fun SequoRiderShell(
             .onSuccess { user -> signedInUser = user }
             .onFailure { error -> authError = userFacingAuthError(error, language) }
         authLoading = false
+    }
+
+    fun refreshMissions(showLoading: Boolean = true) {
+        scope.launch {
+            if (showLoading) missionsLoading = true
+            missionActionFailed = false
+            runCatching { missionRepository.listMissions(profile.riderId) }
+                .onSuccess { latest ->
+                    missions = latest
+                    missionsOffline = false
+                }
+                .onFailure {
+                    missionsOffline = true
+                }
+            missionsLoading = false
+        }
+    }
+
+    fun acceptMission(mission: RiderMission) {
+        if (missionActionInProgressId != null) return
+        scope.launch {
+            missionActionInProgressId = mission.id
+            missionActionFailed = false
+            runCatching { missionRepository.acceptMission(mission.id) }
+                .onSuccess { updated ->
+                    missions = missions.map { if (it.id == updated.id) updated else it }
+                    missionsOffline = false
+                }
+                .onFailure {
+                    missionActionFailed = true
+                }
+            missionActionInProgressId = null
+        }
+    }
+
+    LaunchedEffect(missionRepository, profile.riderId) {
+        missionsLoading = true
+        runCatching { missionRepository.listMissions(profile.riderId) }
+            .onSuccess { latest ->
+                missions = latest
+                missionsOffline = false
+            }
+            .onFailure {
+                missionsOffline = true
+            }
+        missionsLoading = false
     }
 
     CompositionLocalProvider(LocalAppLanguage provides language) {
@@ -170,6 +221,13 @@ fun SequoRiderShell(
                     when (currentSection) {
                         RiderSection.Missions -> MissionsScreen(
                             missions = missions,
+                            isLoading = missionsLoading,
+                            isOffline = missionsOffline,
+                            actionInProgressMissionId = missionActionInProgressId,
+                            actionFailed = missionActionFailed,
+                            onRefresh = { refreshMissions() },
+                            onRetry = { refreshMissions() },
+                            onAcceptMission = ::acceptMission,
                             onRouteClick = { currentSection = RiderSection.ActiveRoute },
                             modifier = Modifier.fillMaxSize(),
                         )
