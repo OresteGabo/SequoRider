@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2200" viewBox="0 0 1800 2200">
+  <defs>
+    <filter id="brand-green" color-interpolation-filters="sRGB">
+      <feFlood flood-color="#16A36A"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="white-mark" color-interpolation-filters="sRGB">
+      <feFlood flood-color="#FFFFFF"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="ink-mark" color-interpolation-filters="sRGB">
+      <feFlood flood-color="#12221A"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+    </filter>
+    <style>
+      .page-title { font: 800 64px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; fill: #12221A; letter-spacing: 0; }
+      .section-title { font: 800 38px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; fill: #12221A; letter-spacing: 0; }
+      .label { font: 700 22px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; fill: #607169; letter-spacing: 0; }
+      .word { font: 850 84px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; fill: #12221A; letter-spacing: 0; }
+      .word-small { font: 850 54px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; fill: #12221A; letter-spacing: 0; }
+      .word-dark { fill: #F5FFF9; }
+      .sub { font: 650 28px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; fill: #6F8178; letter-spacing: 0; }
+      .sub-dark { fill: #B9CAC1; }
+      .panel { fill: #F7FAF8; stroke: #DDE8E2; stroke-width: 2; }
+      .dark-panel { fill: #0E1813; stroke: #20372C; stroke-width: 2; }
+      .icon-bg { fill: #16A36A; }
+      .soft-bg { fill: #EAF7F0; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="2200" fill="#FFFFFF"/>
+  <text x="120" y="115" class="page-title">Sequo Logo Variations</text>
+  <text x="120" y="160" class="sub">Green brand family states for Sequo, SequoRider, and SequoHub</text>
+
+  <text x="120" y="250" class="section-title">Primary Sequo</text>
+  <rect x="120" y="290" width="760" height="250" rx="34" class="panel"/>
+  <image href="assets/sequo-shopping-icon.png" x="125" y="273" width="310" height="248" filter="url(#brand-green)"/>
+  <text x="405" y="410" class="word">Sequo</text>
+  <text x="410" y="456" class="sub">Shopping and local marketplace</text>
+
+  <rect x="920" y="290" width="760" height="250" rx="34" class="dark-panel"/>
+  <image href="assets/sequo-shopping-icon.png" x="925" y="273" width="310" height="248" filter="url(#brand-green)"/>
+  <text x="1205" y="410" class="word word-dark">Sequo</text>
+  <text x="1210" y="456" class="sub sub-dark">Dark mode</text>
+
+  <text x="120" y="620" class="section-title">App Icon States</text>
+  <rect x="120" y="660" width="360" height="360" rx="82" class="icon-bg"/>
+  <image href="assets/sequo-shopping-icon.png" x="92" y="616" width="416" height="333" filter="url(#white-mark)"/>
+  <text x="120" y="1065" class="label">Main app icon</text>
+
+  <rect x="540" y="660" width="360" height="360" rx="82" class="icon-bg"/>
+  <image href="assets/sequo-rider-icon.png" x="512" y="616" width="416" height="333" filter="url(#white-mark)"/>
+  <text x="540" y="1065" class="label">SequoRider icon</text>
+
+  <rect x="960" y="660" width="360" height="360" rx="82" class="icon-bg"/>
+  <image href="assets/sequo-hub-icon.png" x="932" y="616" width="416" height="333" filter="url(#white-mark)"/>
+  <text x="960" y="1065" class="label">SequoHub icon</text>
+
+  <rect x="1380" y="660" width="300" height="300" rx="66" class="soft-bg"/>
+  <image href="assets/sequo-shopping-icon.png" x="1348" y="626" width="364" height="291" filter="url(#brand-green)"/>
+  <text x="1380" y="1065" class="label">Light tile</text>
+
+  <text x="120" y="1160" class="section-title">Product Family Wordmarks</text>
+  <rect x="120" y="1200" width="500" height="210" rx="34" class="panel"/>
+  <image href="assets/sequo-shopping-icon.png" x="96" y="1170" width="250" height="200" filter="url(#brand-green)"/>
+  <text x="330" y="1318" class="word-small">Sequo</text>
+
+  <rect x="650" y="1200" width="500" height="210" rx="34" class="panel"/>
+  <image href="assets/sequo-rider-icon.png" x="622" y="1170" width="250" height="200" filter="url(#brand-green)"/>
+  <text x="856" y="1318" class="word-small">SequoRider</text>
+
+  <rect x="1180" y="1200" width="500" height="210" rx="34" class="panel"/>
+  <image href="assets/sequo-hub-icon.png" x="1146" y="1170" width="250" height="200" filter="url(#brand-green)"/>
+  <text x="1380" y="1318" class="word-small">SequoHub</text>
+
+  <text x="120" y="1510" class="section-title">One-Color States</text>
+  <rect x="120" y="1550" width="360" height="300" rx="34" class="panel"/>
+  <image href="assets/sequo-shopping-icon.png" x="90" y="1510" width="420" height="336" filter="url(#brand-green)"/>
+  <text x="120" y="1902" class="label">Brand green</text>
+
+  <rect x="540" y="1550" width="360" height="300" rx="34" class="panel"/>
+  <image href="assets/sequo-shopping-icon.png" x="510" y="1510" width="420" height="336" filter="url(#ink-mark)"/>
+  <text x="540" y="1902" class="label">Ink / print</text>
+
+  <rect x="960" y="1550" width="360" height="300" rx="34" class="dark-panel"/>
+  <image href="assets/sequo-shopping-icon.png" x="930" y="1510" width="420" height="336" filter="url(#white-mark)"/>
+  <text x="960" y="1902" class="label">White on dark</text>
+
+  <rect x="1380" y="1550" width="300" height="300" rx="150" class="soft-bg"/>
+  <image href="assets/sequo-shopping-icon.png" x="1350" y="1518" width="360" height="288" filter="url(#brand-green)"/>
+  <text x="1380" y="1902" class="label">Circular avatar</text>
+
+  <text x="120" y="2030" class="section-title">Suggested Core Color</text>
+  <rect x="120" y="2065" width="110" height="70" rx="18" fill="#16A36A"/>
+  <text x="255" y="2113" class="word-small" font-size="42">#16A36A</text>
+</svg>

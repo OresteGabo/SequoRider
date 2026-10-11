@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="320" viewBox="0 0 980 320">
+  <defs>
+    <filter id="brand-green" color-interpolation-filters="sRGB">
+      <feFlood flood-color="#16A36A"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+    </filter>
+    <style>
+      .word { font: 850 92px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; fill: #12221A; letter-spacing: 0; }
+      .sub { font: 650 32px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; fill: #6F8178; letter-spacing: 0; }
+    </style>
+  </defs>
+  <rect width="980" height="320" fill="none"/>
+  <image href="assets/sequo-rider-icon.png" x="-20" y="20" width="330" height="264" filter="url(#brand-green)"/>
+  <text x="280" y="148" class="word">SequoRider</text>
+  <text x="286" y="198" class="sub">delivery partner app</text>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <filter id="white-mark" color-interpolation-filters="sRGB">
+      <feFlood flood-color="#FFFFFF"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="#16A36A"/>
+  <image href="assets/sequo-rider-icon.png" x="-80" y="155" width="1184" height="947" filter="url(#white-mark)"/>
+</svg>
