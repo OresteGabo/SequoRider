@@ -257,9 +257,13 @@ fun SequoRiderShell(
                             mission = missions.firstOrNull { it.id == selectedMissionId } ?: missions.firstOrNull(),
                             actionInProgress = missionActionInProgressId != null,
                             actionFailed = missionActionFailed,
-                            onMarkPickupDone = { mission ->
+                            onMarkPickupDone = { mission, custodyNote ->
                                 updateMissionAction(mission) {
-                                    missionRepository.markPickedUp(mission.id, proofMetadata = "seller-pickup-proof-pending", idempotencyKey = mission.idempotencyKey("pickup"))
+                                    missionRepository.markPickedUp(
+                                        mission.id,
+                                        proofMetadata = custodyNote.ifBlank { "seller-pickup-confirmed" },
+                                        idempotencyKey = mission.idempotencyKey("pickup"),
+                                    )
                                 }
                             },
                             onConfirmDelivery = { mission ->
@@ -272,9 +276,9 @@ fun SequoRiderShell(
                                     missionRepository.depositAtRelay(mission.id, proofMetadata = "relay-deposit-proof-pending", idempotencyKey = mission.idempotencyKey("relay-deposit"))
                                 }
                             },
-                            onReportProblem = { mission ->
+                            onReportProblem = { mission, reason ->
                                 updateMissionAction(mission) {
-                                    missionRepository.reportProblem(mission.id, reason = "Rider reported an issue from mission detail.", idempotencyKey = mission.idempotencyKey("problem"))
+                                    missionRepository.reportProblem(mission.id, reason = reason, idempotencyKey = mission.idempotencyKey("problem"))
                                 }
                             },
                             modifier = Modifier.fillMaxSize(),
