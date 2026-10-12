@@ -198,6 +198,15 @@ enum class RiderText {
     NotificationDeliveryProblem,
     NotificationPayoutStatus,
     NotificationOther,
+    AdminLoginRequests,
+    AdminLoginWarning,
+    AdminLoginEmpty,
+    AdminLoginError,
+    AdminLoginRefresh,
+    AdminLoginApprove,
+    AdminLoginReject,
+    AdminLoginRequested,
+    AdminLoginExpires,
 }
 
 @Composable
@@ -397,6 +406,15 @@ private val englishText = mapOf(
     RiderText.NotificationDeliveryProblem to "Delivery problem",
     RiderText.NotificationPayoutStatus to "Payout status",
     RiderText.NotificationOther to "Operational alert",
+    RiderText.AdminLoginRequests to "Admin login requests",
+    RiderText.AdminLoginWarning to "Only approve if the code matches the admin website.",
+    RiderText.AdminLoginEmpty to "No admin login requests.",
+    RiderText.AdminLoginError to "Admin login requests could not be loaded. Please try again.",
+    RiderText.AdminLoginRefresh to "Refresh",
+    RiderText.AdminLoginApprove to "Approve",
+    RiderText.AdminLoginReject to "Reject",
+    RiderText.AdminLoginRequested to "Requested",
+    RiderText.AdminLoginExpires to "Expires",
 )
 
 private val frenchText = mapOf(
@@ -587,4 +605,13 @@ private val frenchText = mapOf(
     RiderText.NotificationDeliveryProblem to "Probleme livraison",
     RiderText.NotificationPayoutStatus to "Statut paiement",
     RiderText.NotificationOther to "Alerte operationnelle",
+    RiderText.AdminLoginRequests to "Demandes de connexion admin",
+    RiderText.AdminLoginWarning to "Approuvez seulement si le code correspond au site admin.",
+    RiderText.AdminLoginEmpty to "Aucune demande de connexion admin.",
+    RiderText.AdminLoginError to "Les demandes de connexion admin n'ont pas pu etre chargees. Reessayez.",
+    RiderText.AdminLoginRefresh to "Actualiser",
+    RiderText.AdminLoginApprove to "Approuver",
+    RiderText.AdminLoginReject to "Refuser",
+    RiderText.AdminLoginRequested to "Demandee",
+    RiderText.AdminLoginExpires to "Expire",
 )
