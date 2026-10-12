@@ -30,6 +30,7 @@ import platform.Security.kSecMatchLimitOne
 import platform.Security.kSecReturnData
 import platform.Security.kSecValueData
 
+@OptIn(ExperimentalForeignApi::class)
 internal class AuthKeychainStore(
     private val service: String = "dev.orestegabo.sequorider.auth",
 ) {

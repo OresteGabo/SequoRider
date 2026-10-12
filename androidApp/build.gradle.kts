@@ -14,6 +14,10 @@ dependencies {
     implementation(project(":shared"))
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.playServicesAuth)
+    implementation(libs.googleid)
+    implementation(libs.play.services.auth)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
