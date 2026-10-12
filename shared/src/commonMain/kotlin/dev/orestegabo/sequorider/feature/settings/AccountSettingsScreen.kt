@@ -45,6 +45,8 @@ fun AccountSettingsScreen(
     onNotificationArchive: (RiderNotification) -> Unit,
     onNotificationUnarchive: (RiderNotification) -> Unit,
     onNotificationPreferenceChange: (RiderNotificationPreference) -> Unit,
+    pendingAdminLoginRequestCount: Int = 0,
+    onAdminLoginRequestsClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val visibleNotifications = notifications.filter { includeArchivedNotifications || !it.archived }
@@ -99,6 +101,19 @@ fun AccountSettingsScreen(
                 preferenceSaved = notificationPreferenceSaved,
                 onPreferenceChange = onNotificationPreferenceChange,
             )
+        }
+        if (pendingAdminLoginRequestCount > 0) {
+            item {
+                RiderCard {
+                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(appText(RiderText.AdminLoginRequests), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(appText(RiderText.AdminLoginWarning), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        OutlinedButton(onClick = onAdminLoginRequestsClick, modifier = Modifier.fillMaxWidth()) {
+                            Text("${appText(RiderText.AdminLoginRequests)} ($pendingAdminLoginRequestCount)")
+                        }
+                    }
+                }
+            }
         }
         item {
             RiderCard {
