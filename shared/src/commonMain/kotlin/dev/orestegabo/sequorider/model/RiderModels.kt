@@ -70,6 +70,15 @@ enum class PayoutStatus {
     Paid,
 }
 
+enum class PayoutEntryStatus {
+    NOT_APPLICABLE,
+    AVAILABLE,
+    ON_HOLD,
+    PROCESSING,
+    PAID,
+    CORRECTED,
+}
+
 data class RiderProfile(
     val riderId: String,
     val displayName: String,
@@ -164,6 +173,21 @@ data class PayoutSummary(
     val onHoldCfa: Int,
     val lastPayoutCfa: Int,
     val status: PayoutStatus,
+    val payable: Boolean = true,
+    val paidOrProcessingCfa: Int = lastPayoutCfa,
+    val historyCount: Int = 0,
+    val message: String? = null,
+)
+
+data class PayoutHistoryItem(
+    val id: String,
+    val missionId: String,
+    val amountCfa: Int,
+    val payableAmountCfa: Int,
+    val status: PayoutEntryStatus,
+    val payableToRider: Boolean,
+    val description: String,
+    val createdAt: String,
 )
 
 fun Int.formatCfa(): String = "$this FCFA"
@@ -306,5 +330,30 @@ object DemoRiderData {
         onHoldCfa = 0,
         lastPayoutCfa = 12_000,
         status = PayoutStatus.Available,
+        historyCount = 2,
+        message = "Local payout preview.",
+    )
+
+    val payoutHistory = listOf(
+        PayoutHistoryItem(
+            id = "demo-payout-1",
+            missionId = "mission-0998",
+            amountCfa = 500,
+            payableAmountCfa = 500,
+            status = PayoutEntryStatus.AVAILABLE,
+            payableToRider = true,
+            description = "Completed customer delivery.",
+            createdAt = "local-demo",
+        ),
+        PayoutHistoryItem(
+            id = "demo-payout-2",
+            missionId = "mission-0997",
+            amountCfa = 650,
+            payableAmountCfa = 0,
+            status = PayoutEntryStatus.ON_HOLD,
+            payableToRider = false,
+            description = "Problem reported; support review required.",
+            createdAt = "local-demo",
+        ),
     )
 }

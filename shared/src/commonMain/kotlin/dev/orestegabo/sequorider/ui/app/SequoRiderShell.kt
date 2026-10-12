@@ -39,6 +39,9 @@ import dev.orestegabo.sequorider.core.missions.DemoMissionRepository
 import dev.orestegabo.sequorider.core.missions.NetworkRiderMissionRepository
 import dev.orestegabo.sequorider.core.missions.RiderMissionApiClient
 import dev.orestegabo.sequorider.core.payout.DemoPayoutRepository
+import dev.orestegabo.sequorider.core.payout.NetworkRiderPayoutRepository
+import dev.orestegabo.sequorider.core.payout.RiderPayoutApiClient
+import dev.orestegabo.sequorider.core.payout.safePayoutFallbackSummary
 import dev.orestegabo.sequorider.feature.auth.RiderAuthScreen
 import dev.orestegabo.sequorider.feature.settings.AccountSettingsScreen
 import dev.orestegabo.sequorider.feature.settings.AppLanguage
@@ -46,6 +49,7 @@ import dev.orestegabo.sequorider.feature.settings.LocalAppLanguage
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.DemoRiderData
+import dev.orestegabo.sequorider.model.PayoutHistoryItem
 import dev.orestegabo.sequorider.model.RiderMission
 import dev.orestegabo.sequorider.model.RiderSection
 import dev.orestegabo.sequorider.ui.chrome.RiderBottomBar
@@ -77,7 +81,6 @@ fun SequoRiderShell(
     }
     val scope = rememberCoroutineScope()
     val sessionRepository = remember { DemoRiderSessionRepository() }
-    val payoutRepository = remember { DemoPayoutRepository() }
     val profile = remember { sessionRepository.currentProfile() }
     var signedInUser by remember { mutableStateOf<CurrentUser?>(null) }
     var accessToken by remember { mutableStateOf<String?>(null) }
@@ -91,13 +94,25 @@ fun SequoRiderShell(
             DemoMissionRepository()
         }
     }
+    val payoutRepository = remember(signedInUser, accessToken, useLocalDemo) {
+        if (signedInUser != null && !useLocalDemo && !accessToken.isNullOrBlank()) {
+            NetworkRiderPayoutRepository(
+                RiderPayoutApiClient(accessTokenProvider = { accessToken }),
+            )
+        } else {
+            DemoPayoutRepository()
+        }
+    }
     var missions by remember { mutableStateOf(DemoRiderData.missions) }
     var missionsLoading by remember { mutableStateOf(false) }
     var missionsOffline by remember { mutableStateOf(false) }
     var missionActionInProgressId by remember { mutableStateOf<String?>(null) }
     var missionActionFailed by remember { mutableStateOf(false) }
     var selectedMissionId by remember { mutableStateOf<String?>(null) }
-    val payoutSummary = remember { payoutRepository.summary() }
+    var payoutSummary by remember { mutableStateOf(DemoRiderData.payoutSummary) }
+    var payoutHistory by remember { mutableStateOf<List<PayoutHistoryItem>>(DemoRiderData.payoutHistory) }
+    var payoutLoading by remember { mutableStateOf(false) }
+    var payoutOffline by remember { mutableStateOf(false) }
     var authLoading by remember { mutableStateOf(false) }
     var authError by remember { mutableStateOf<String?>(null) }
 
@@ -125,6 +140,25 @@ fun SequoRiderShell(
                     missionsOffline = true
                 }
             missionsLoading = false
+        }
+    }
+
+    fun refreshPayout(showLoading: Boolean = true) {
+        scope.launch {
+            if (showLoading) payoutLoading = true
+            runCatching { payoutRepository.summary() to payoutRepository.history() }
+                .onSuccess { (summary, history) ->
+                    payoutSummary = summary
+                    payoutHistory = history
+                    payoutOffline = false
+                }
+                .onFailure {
+                    if (payoutHistory.isEmpty()) {
+                        payoutSummary = safePayoutFallbackSummary()
+                    }
+                    payoutOffline = true
+                }
+            payoutLoading = false
         }
     }
 
@@ -179,6 +213,10 @@ fun SequoRiderShell(
                 missionsOffline = true
             }
         missionsLoading = false
+    }
+
+    LaunchedEffect(payoutRepository) {
+        refreshPayout(showLoading = false)
     }
 
     CompositionLocalProvider(LocalAppLanguage provides language) {
@@ -332,7 +370,17 @@ fun SequoRiderShell(
                             onRetry = { refreshMissions() },
                             modifier = Modifier.fillMaxSize(),
                         )
-                        RiderSection.Payout -> PayoutScreen(profile = profile, summary = payoutSummary, missions = missions, modifier = Modifier.fillMaxSize())
+                        RiderSection.Payout -> PayoutScreen(
+                            profile = profile,
+                            summary = payoutSummary,
+                            history = payoutHistory,
+                            missions = missions,
+                            isLoading = payoutLoading,
+                            isOffline = payoutOffline,
+                            onRefresh = { refreshPayout() },
+                            onRetry = { refreshPayout() },
+                            modifier = Modifier.fillMaxSize(),
+                        )
                         RiderSection.Account -> AccountSettingsScreen(
                             profile = profile,
                             language = language,

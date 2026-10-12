@@ -169,6 +169,12 @@ enum class RiderText {
     PayoutStatus,
     SalaryHandledOutsideSplits,
     PayoutLocalDemo,
+    PayoutOffline,
+    PayoutLoading,
+    PayoutHistory,
+    PayoutHistoryEmpty,
+    PayableAmount,
+    PaidOrProcessing,
     NoPayoutExecution,
 }
 
@@ -340,6 +346,12 @@ private val englishText = mapOf(
     RiderText.PayoutStatus to "Payout status",
     RiderText.SalaryHandledOutsideSplits to "Salary is handled outside delivery splits.",
     RiderText.PayoutLocalDemo to "Local/demo payout preview until a rider payout endpoint is available.",
+    RiderText.PayoutOffline to "Payout data is offline. Showing local data when available.",
+    RiderText.PayoutLoading to "Loading payout data...",
+    RiderText.PayoutHistory to "Payout history",
+    RiderText.PayoutHistoryEmpty to "No payout history yet.",
+    RiderText.PayableAmount to "Payable amount",
+    RiderText.PaidOrProcessing to "Paid / processing",
     RiderText.NoPayoutExecution to "No payout execution is available in this app.",
 )
 
@@ -502,5 +514,11 @@ private val frenchText = mapOf(
     RiderText.PayoutStatus to "Statut paiement",
     RiderText.SalaryHandledOutsideSplits to "Le salaire est gere hors repartitions de livraison.",
     RiderText.PayoutLocalDemo to "Apercu paiement local/demo jusqu'a disponibilite endpoint coursier.",
+    RiderText.PayoutOffline to "Donnees paiement hors ligne. Donnees locales affichees si disponibles.",
+    RiderText.PayoutLoading to "Chargement des paiements...",
+    RiderText.PayoutHistory to "Historique paiements",
+    RiderText.PayoutHistoryEmpty to "Aucun historique de paiement pour l'instant.",
+    RiderText.PayableAmount to "Montant payable",
+    RiderText.PaidOrProcessing to "Paye / en traitement",
     RiderText.NoPayoutExecution to "Aucune execution de paiement n'est disponible dans cette app.",
 )
