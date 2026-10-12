@@ -38,6 +38,10 @@ import dev.orestegabo.sequorider.core.auth.rememberSecureTokenStorage
 import dev.orestegabo.sequorider.core.missions.DemoMissionRepository
 import dev.orestegabo.sequorider.core.missions.NetworkRiderMissionRepository
 import dev.orestegabo.sequorider.core.missions.RiderMissionApiClient
+import dev.orestegabo.sequorider.core.notifications.DemoRiderNotificationsRepository
+import dev.orestegabo.sequorider.core.notifications.NetworkRiderNotificationsRepository
+import dev.orestegabo.sequorider.core.notifications.RiderNotificationsApiClient
+import dev.orestegabo.sequorider.core.notifications.RiderNotificationsRepository
 import dev.orestegabo.sequorider.core.payout.DemoPayoutRepository
 import dev.orestegabo.sequorider.core.payout.NetworkRiderPayoutRepository
 import dev.orestegabo.sequorider.core.payout.RiderPayoutApiClient
@@ -51,6 +55,9 @@ import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.DemoRiderData
 import dev.orestegabo.sequorider.model.PayoutHistoryItem
 import dev.orestegabo.sequorider.model.RiderMission
+import dev.orestegabo.sequorider.model.RiderNotification
+import dev.orestegabo.sequorider.model.RiderNotificationPreference
+import dev.orestegabo.sequorider.model.RiderNotificationPreferenceEventType
 import dev.orestegabo.sequorider.model.RiderSection
 import dev.orestegabo.sequorider.ui.chrome.RiderBottomBar
 import dev.orestegabo.sequorider.ui.chrome.label
@@ -103,6 +110,15 @@ fun SequoRiderShell(
             DemoPayoutRepository()
         }
     }
+    val notificationsRepository: RiderNotificationsRepository = remember(signedInUser, accessToken, useLocalDemo) {
+        if (signedInUser != null && !useLocalDemo && !accessToken.isNullOrBlank()) {
+            NetworkRiderNotificationsRepository(
+                RiderNotificationsApiClient(accessTokenProvider = { accessToken }),
+            )
+        } else {
+            DemoRiderNotificationsRepository(DemoRiderData.notifications)
+        }
+    }
     var missions by remember { mutableStateOf(DemoRiderData.missions) }
     var missionsLoading by remember { mutableStateOf(false) }
     var missionsOffline by remember { mutableStateOf(false) }
@@ -113,6 +129,13 @@ fun SequoRiderShell(
     var payoutHistory by remember { mutableStateOf<List<PayoutHistoryItem>>(DemoRiderData.payoutHistory) }
     var payoutLoading by remember { mutableStateOf(false) }
     var payoutOffline by remember { mutableStateOf(false) }
+    var notifications by remember { mutableStateOf<List<RiderNotification>>(DemoRiderData.notifications) }
+    var notificationPreference by remember { mutableStateOf(RiderNotificationPreference()) }
+    var notificationsLoading by remember { mutableStateOf(false) }
+    var notificationsOffline by remember { mutableStateOf(false) }
+    var notificationActionFailed by remember { mutableStateOf(false) }
+    var notificationPreferenceSaved by remember { mutableStateOf(false) }
+    var includeArchivedNotifications by remember { mutableStateOf(false) }
     var authLoading by remember { mutableStateOf(false) }
     var authError by remember { mutableStateOf<String?>(null) }
 
@@ -159,6 +182,58 @@ fun SequoRiderShell(
                     payoutOffline = true
                 }
             payoutLoading = false
+        }
+    }
+
+    fun refreshNotifications(showLoading: Boolean = true) {
+        scope.launch {
+            if (showLoading) notificationsLoading = true
+            notificationActionFailed = false
+            notificationPreferenceSaved = false
+            runCatching { notificationsRepository.inbox(includeArchivedNotifications) }
+                .onSuccess { latest ->
+                    notifications = latest.ifEmpty { DemoRiderData.notifications }
+                    notificationsOffline = false
+                }
+                .onFailure {
+                    notifications = DemoRiderData.notifications
+                    notificationsOffline = true
+                }
+            runCatching { notificationsRepository.effectivePreference(RiderNotificationPreferenceEventType.RIDER_MISSION_OFFERED) }
+                .onSuccess { preference ->
+                    notificationPreference = preference.copy(eventType = RiderNotificationPreferenceEventType.ALL)
+                }
+            notificationsLoading = false
+        }
+    }
+
+    fun replaceNotification(updated: RiderNotification) {
+        notifications = notifications.map { if (it.id == updated.id) updated else it }
+    }
+
+    fun handleNotificationAction(
+        notification: RiderNotification,
+        action: suspend (String) -> RiderNotification,
+    ) {
+        scope.launch {
+            notificationActionFailed = false
+            notificationPreferenceSaved = false
+            runCatching { action(notification.id) }
+                .onSuccess { updated -> replaceNotification(updated) }
+                .onFailure { notificationActionFailed = true }
+        }
+    }
+
+    fun saveNotificationPreference(preference: RiderNotificationPreference) {
+        scope.launch {
+            notificationActionFailed = false
+            notificationPreferenceSaved = false
+            runCatching { notificationsRepository.savePreference(preference) }
+                .onSuccess { updated ->
+                    notificationPreference = updated.copy(eventType = RiderNotificationPreferenceEventType.ALL)
+                    notificationPreferenceSaved = true
+                }
+                .onFailure { notificationActionFailed = true }
         }
     }
 
@@ -217,6 +292,10 @@ fun SequoRiderShell(
 
     LaunchedEffect(payoutRepository) {
         refreshPayout(showLoading = false)
+    }
+
+    LaunchedEffect(notificationsRepository, includeArchivedNotifications) {
+        refreshNotifications(showLoading = false)
     }
 
     CompositionLocalProvider(LocalAppLanguage provides language) {
@@ -385,6 +464,25 @@ fun SequoRiderShell(
                             profile = profile,
                             language = language,
                             onLanguageChange = { language = it },
+                            notifications = notifications,
+                            notificationPreference = notificationPreference,
+                            notificationsLoading = notificationsLoading,
+                            notificationsOffline = notificationsOffline,
+                            notificationActionFailed = notificationActionFailed,
+                            notificationPreferenceSaved = notificationPreferenceSaved,
+                            includeArchivedNotifications = includeArchivedNotifications,
+                            onIncludeArchivedNotificationsChange = { includeArchivedNotifications = it },
+                            onNotificationsRefresh = { refreshNotifications() },
+                            onNotificationRead = { notification ->
+                                handleNotificationAction(notification, notificationsRepository::markRead)
+                            },
+                            onNotificationArchive = { notification ->
+                                handleNotificationAction(notification, notificationsRepository::archive)
+                            },
+                            onNotificationUnarchive = { notification ->
+                                handleNotificationAction(notification, notificationsRepository::unarchive)
+                            },
+                            onNotificationPreferenceChange = ::saveNotificationPreference,
                             modifier = Modifier.fillMaxSize(),
                         )
                     }

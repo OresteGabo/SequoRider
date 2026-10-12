@@ -190,6 +190,63 @@ data class PayoutHistoryItem(
     val createdAt: String,
 )
 
+enum class RiderNotificationSeverity {
+    INFO,
+    ACTION_REQUIRED,
+    URGENT,
+    SECURITY,
+    FINANCIAL,
+}
+
+enum class RiderNotificationEventType {
+    RIDER_MISSION_OFFERED,
+    RIDER_ACCEPTED_MISSION,
+    RIDER_PICKED_UP,
+    RIDER_ARRIVED,
+    DELIVERY_PROBLEM_REPORTED,
+    MISSING_DEPOT_BLOCKED_TOUR,
+    PAYOUT_SENT,
+}
+
+enum class RiderNotificationPreferenceEventType {
+    ALL,
+    RIDER_MISSION_OFFERED,
+    RIDER_ACCEPTED_MISSION,
+    RIDER_PICKED_UP,
+    RIDER_ARRIVED,
+    DELIVERY_PROBLEM_REPORTED,
+    MISSING_DEPOT_BLOCKED_TOUR,
+    PAYOUT_SENT,
+}
+
+data class RiderNotification(
+    val id: String,
+    val eventId: String,
+    val appFamily: String = "SEQUO_RIDER",
+    val eventType: RiderNotificationEventType,
+    val severity: RiderNotificationSeverity = RiderNotificationSeverity.INFO,
+    val title: String,
+    val body: String,
+    val actionUrl: String? = null,
+    val readAt: String? = null,
+    val archivedAt: String? = null,
+    val createdAt: String,
+) {
+    val unread: Boolean get() = readAt == null
+    val archived: Boolean get() = archivedAt != null
+}
+
+data class RiderNotificationPreference(
+    val id: String? = null,
+    val appFamily: String = "SEQUO_RIDER",
+    val eventType: RiderNotificationPreferenceEventType = RiderNotificationPreferenceEventType.ALL,
+    val pushEnabled: Boolean = true,
+    val inAppEnabled: Boolean = true,
+    val smsEnabled: Boolean = false,
+    val quietHoursStart: String? = null,
+    val quietHoursEnd: String? = null,
+)
+
 fun Int.formatCfa(): String = "$this FCFA"
 
 object DemoRiderData {
@@ -308,6 +365,45 @@ object DemoRiderData {
             problemMetadata = "Customer unavailable",
             createdAt = "local-demo",
             updatedAt = "local-demo",
+        ),
+    )
+
+    val notifications = listOf(
+        RiderNotification(
+            id = "rider-notification-1",
+            eventId = "event-rider-mission-offered",
+            eventType = RiderNotificationEventType.RIDER_MISSION_OFFERED,
+            severity = RiderNotificationSeverity.ACTION_REQUIRED,
+            title = "New mission",
+            body = "Pickup from Akif Burger toward Tokoin.",
+            createdAt = "2026-10-12T10:15:00Z",
+        ),
+        RiderNotification(
+            id = "rider-notification-2",
+            eventId = "event-route-update",
+            eventType = RiderNotificationEventType.RIDER_ARRIVED,
+            title = "Route update",
+            body = "Customer handoff address has been refreshed.",
+            createdAt = "2026-10-12T10:05:00Z",
+            readAt = "2026-10-12T10:06:00Z",
+        ),
+        RiderNotification(
+            id = "rider-notification-3",
+            eventId = "event-delivery-problem",
+            eventType = RiderNotificationEventType.DELIVERY_PROBLEM_REPORTED,
+            severity = RiderNotificationSeverity.URGENT,
+            title = "Delivery problem",
+            body = "A delivery issue needs review before payout is released.",
+            createdAt = "2026-10-12T09:55:00Z",
+        ),
+        RiderNotification(
+            id = "rider-notification-4",
+            eventId = "event-payout-status",
+            eventType = RiderNotificationEventType.PAYOUT_SENT,
+            severity = RiderNotificationSeverity.FINANCIAL,
+            title = "Payout status",
+            body = "Your latest payable missions are ready for review.",
+            createdAt = "2026-10-12T09:30:00Z",
         ),
     )
 
