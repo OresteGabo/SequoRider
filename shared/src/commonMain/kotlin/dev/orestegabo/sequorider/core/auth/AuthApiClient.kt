@@ -192,9 +192,7 @@ data class CurrentUser(
 }
 
 fun CurrentUser.hasRiderAccess(): Boolean =
-    active && roles.any { it.uppercase() in RiderRoles }
-
-private val RiderRoles = setOf("COURIER", "ADMIN", "SUPER_ADMIN", "SUPPORT_AGENT")
+    active && roles.any { it.equals("COURIER", ignoreCase = true) }
 
 class AuthApiException(
     val statusCode: Int?,
