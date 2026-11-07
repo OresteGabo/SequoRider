@@ -321,7 +321,8 @@ fun ActiveRouteScreen(
                                 onConfirmDelivery(mission, deliveryPin, deliveryProblemReason)
                             }
                         },
-                        enabled = !actionInProgress && mission.canConfirmDropoff(deliveryPin),
+                        enabled = !actionInProgress && mission.canConfirmDropoff(deliveryPin) &&
+                            (mission.destinationType != MissionDestinationType.RELAY_POINT || lockerSlot.isNotBlank()),
                         modifier = Modifier.weight(1f),
                     ) {
                         Text(if (mission.destinationType == MissionDestinationType.RELAY_POINT) appText(RiderText.ConfirmRelayDeposit) else appText(RiderText.ConfirmDelivery))
@@ -457,7 +458,7 @@ private fun RelayDepositPanel(
             )
             Button(
                 onClick = onConfirmRelayDeposit,
-                enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER,
+                enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER && lockerSlot.isNotBlank(),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(appText(RiderText.ConfirmDeposit))

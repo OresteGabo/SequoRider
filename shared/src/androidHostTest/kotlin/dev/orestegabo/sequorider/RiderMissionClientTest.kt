@@ -54,6 +54,37 @@ class RiderMissionClientTest {
     }
 
     @Test
+    fun relayReadAndDepositUsePersistedDestinationAndTypedSlot() = runBlocking<Unit> {
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        val relay = mission.replace("CUSTOMER_ADDRESS", "RELAY_POINT").replace("ACCEPTED_BY_COURIER", "PICKED_UP_FROM_SELLER")
+            .replace("\"homeDestination\":", "\"legacyHiddenContact\":").dropLast(1) +
+            """, "relayDestination":{"id":"relay-A","name":"Relais A","city":"Lomé","landmark":"Approved staging landmark"}}"""
+        server.createContext("/api/rider/missions/mission-1") { exchange ->
+            assertEquals("Bearer rider-fixture", exchange.requestHeaders.getFirst("Authorization"))
+            val deposit = exchange.requestURI.path.endsWith("/relay-deposit")
+            if (deposit) {
+                val body = Json.parseToJsonElement(exchange.requestBody.readBytes().decodeToString())
+                assertEquals(Json.parseToJsonElement("""{"relayPointId":"relay-A","lockerCode":"SLOT-1","proofMetadata":"Custody accepted","idempotencyKey":"deposit-1"}"""), body)
+            }
+            val bytes = (if (deposit) relay.replace("PICKED_UP_FROM_SELLER", "DEPOSITED_AT_RELAY") else relay).toByteArray()
+            exchange.responseHeaders.set("Content-Type", "application/json")
+            exchange.sendResponseHeaders(200, bytes.size.toLong())
+            exchange.responseBody.use { it.write(bytes) }
+        }
+        server.start()
+        val client = RiderMissionApiClient("http://127.0.0.1:${server.address.port}", { "rider-fixture" })
+        try {
+            val actual = client.getMission("mission-1")
+            assertEquals("relay-A", actual.relayPointId)
+            assertEquals("Relais A", actual.dropoffStop.title)
+            assertTrue(actual.dropoffStop.area.contains("Approved staging landmark"))
+            assertEquals(null, actual.customerDeliveryNote)
+            val deposited = client.depositAtRelay("mission-1", "Custody accepted", "deposit-1", actual.relayPointId, "SLOT-1")
+            assertEquals(MissionStatus.DEPOSITED_AT_RELAY, deposited.status)
+        } finally { client.close(); server.stop(0) }
+    }
+
+    @Test
     fun proofRequestUsesJsonAndStableRetryKeyAndDoesNotMaskRejection() = runBlocking<Unit> {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         var calls = 0

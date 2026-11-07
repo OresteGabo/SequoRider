@@ -15,7 +15,7 @@ interface RiderMissionRepository {
     suspend fun markPickedUp(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission
     suspend fun startDelivery(missionId: String): RiderMission
     suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission
-    suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission
+    suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?, relayPointId: String? = null, lockerCode: String? = null): RiderMission
     suspend fun reportProblem(missionId: String, reason: String, idempotencyKey: String?): RiderMission
     suspend fun courierAvailability(courierId: String): CourierAvailabilityState?
     fun activeRoute(): RiderRoutePlan
@@ -63,7 +63,7 @@ open class FakeRiderMissionRepository(
             )
         }
 
-    override suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
+    override suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?, relayPointId: String?, lockerCode: String?): RiderMission =
         updateMission(missionId) { mission ->
             mission.copy(
                 status = MissionStatus.DEPOSITED_AT_RELAY,

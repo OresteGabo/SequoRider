@@ -446,7 +446,7 @@ fun SequoRiderShell(
                                         packageCode.takeIf { it.isNotBlank() }?.let { "package=$it" },
                                         lockerSlot.takeIf { it.isNotBlank() }?.let { "slot=$it" },
                                     ).joinToString("; ").ifBlank { "relay-deposit-confirmed" }
-                                    missionRepository.depositAtRelay(mission.id, proofMetadata = metadata, idempotencyKey = mission.idempotencyKey("relay-deposit"))
+                                    missionRepository.depositAtRelay(mission.id, proofMetadata = metadata, idempotencyKey = mission.idempotencyKey("relay-deposit"), relayPointId = mission.relayPointId, lockerCode = lockerSlot.trim())
                                 }
                             },
                             onReportProblem = { mission, reason ->

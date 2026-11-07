@@ -65,8 +65,8 @@ class RiderMissionApiClient(
     suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission =
         postMission(missionId, "delivery/complete", ProofRequest(proofMetadata = proofMetadata, deliveryPin = deliveryPin, idempotencyKey = idempotencyKey))
 
-    suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
-        postMission(missionId, "relay-deposit", ProofRequest(proofMetadata = proofMetadata, idempotencyKey = idempotencyKey))
+    suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?, relayPointId: String? = null, lockerCode: String? = null): RiderMission =
+        postMission(missionId, "relay-deposit", ProofRequest(proofMetadata = proofMetadata, idempotencyKey = idempotencyKey, relayPointId = relayPointId, lockerCode = lockerCode))
 
     suspend fun reportProblem(missionId: String, reason: String, idempotencyKey: String?): RiderMission =
         postMission(missionId, "problem", ProblemRequest(reason = reason, idempotencyKey = idempotencyKey))
@@ -126,8 +126,8 @@ class NetworkRiderMissionRepository(
     override suspend fun markDelivered(missionId: String, proofMetadata: String?, deliveryPin: String?, idempotencyKey: String?): RiderMission =
         apiClient.markDelivered(missionId, proofMetadata, deliveryPin, idempotencyKey)
 
-    override suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?): RiderMission =
-        apiClient.depositAtRelay(missionId, proofMetadata, idempotencyKey)
+    override suspend fun depositAtRelay(missionId: String, proofMetadata: String?, idempotencyKey: String?, relayPointId: String?, lockerCode: String?): RiderMission =
+        apiClient.depositAtRelay(missionId, proofMetadata, idempotencyKey, relayPointId, lockerCode)
 
     override suspend fun reportProblem(missionId: String, reason: String, idempotencyKey: String?): RiderMission =
         apiClient.reportProblem(missionId, reason, idempotencyKey)
@@ -164,6 +164,7 @@ private data class DeliveryMissionDto(
     val pickupName: String? = null,
     val dropoffArea: String? = null,
     val homeDestination: HomeDestinationDto? = null,
+    val relayDestination: RelayDestinationDto? = null,
 ) {
     fun toModel(): RiderMission {
         val pickup = PickupStop(
@@ -176,9 +177,9 @@ private data class DeliveryMissionDto(
         val dropoff = DropoffStop(
             id = "$id-dropoff",
             destinationType = destinationType,
-            title = homeDestination?.recipientName ?: destinationType.name,
-            area = homeDestination?.let { listOfNotNull(it.streetHint, it.area, it.city).joinToString(", ") } ?: dropoffArea.orEmpty(),
-            completed = deliveredAt != null,
+            title = relayDestination?.name ?: homeDestination?.recipientName ?: destinationType.name,
+            area = relayDestination?.let { listOfNotNull(it.landmark, it.neighborhood, it.city).joinToString(", ") } ?: homeDestination?.let { listOfNotNull(it.streetHint, it.area, it.city).joinToString(", ") } ?: dropoffArea.orEmpty(),
+            completed = deliveredAt != null || relayDepositedAt != null,
         )
         return RiderMission(
             id = id,
@@ -188,6 +189,7 @@ private data class DeliveryMissionDto(
             courierId = courierId,
             serviceType = deliveryMode,
             destinationType = destinationType,
+            relayPointId = relayDestination?.id,
             status = status,
             pickupStops = listOf(pickup),
             dropoffStop = dropoff,
@@ -257,6 +259,8 @@ private data class CourierAvailabilityDto(
 
 @Serializable
 private data class ProofRequest(
+    val relayPointId: String? = null,
+    val lockerCode: String? = null,
     val proofMetadata: String? = null,
     val deliveryPin: String? = null,
     val idempotencyKey: String? = null,
@@ -300,3 +304,7 @@ private data class HomeDestinationDto(
     val recipientName: String, val phoneNumber: String, val city: String,
     val area: String? = null, val streetHint: String? = null,
 )
+
+@Serializable
+private data class RelayDestinationDto(val id: String, val name: String, val city: String? = null,
+    val neighborhood: String? = null, val landmark: String? = null)

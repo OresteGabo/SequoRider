@@ -121,6 +121,7 @@ data class RiderMission(
     val problemMetadata: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,
+    val relayPointId: String? = null,
 )
 
 data class PickupStop(
