@@ -38,6 +38,7 @@ fun HistoryScreen(
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    localMode: Boolean = false,
 ) {
     var selectedFilter by remember { mutableStateOf(HistoryFilter.All) }
     val historyMissions = missions.filter { it.status in historyStatuses }
@@ -59,7 +60,8 @@ fun HistoryScreen(
                     when {
                         isLoading -> appText(RiderText.LoadingMissions)
                         isOffline -> appText(RiderText.OfflineMissions)
-                        else -> appText(RiderText.HistoryLocalDemo)
+                        localMode -> appText(RiderText.HistoryLocalDemo)
+                        else -> appText(RiderText.HistoryDataLoaded)
                     },
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

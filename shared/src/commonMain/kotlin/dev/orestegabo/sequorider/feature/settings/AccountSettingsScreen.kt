@@ -63,13 +63,17 @@ fun AccountSettingsScreen(
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                         Column {
                             Text(profile.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text(appText(RiderText.LocalDemo), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(profile.riderId, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        RiderStatusPill(profile.availability.label())
+                        RiderStatusPill(profile.availability?.label() ?: appText(RiderText.NotAvailableYet))
                     }
-                    RiderKeyValueRow(appText(RiderText.Fleet), profile.fleetClass.name)
-                    RiderKeyValueRow(appText(RiderText.ServiceZone), profile.serviceZone)
-                    RiderKeyValueRow(appText(RiderText.KycApproved), if (profile.kycApproved) appText(RiderText.Completed) else appText(RiderText.Pending))
+                    RiderKeyValueRow(appText(RiderText.Fleet), profile.fleetClass?.name ?: appText(RiderText.NotAvailableYet))
+                    RiderKeyValueRow(appText(RiderText.ServiceZone), profile.serviceZone.ifBlank { appText(RiderText.NotAvailableYet) })
+                    RiderKeyValueRow(appText(RiderText.KycApproved), when (profile.kycApproved) {
+                        true -> appText(RiderText.Completed)
+                        false -> appText(RiderText.Pending)
+                        null -> appText(RiderText.NotAvailableYet)
+                    })
                 }
             }
         }

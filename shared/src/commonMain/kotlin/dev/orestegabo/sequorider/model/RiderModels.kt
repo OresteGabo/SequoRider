@@ -82,11 +82,11 @@ enum class PayoutEntryStatus {
 data class RiderProfile(
     val riderId: String,
     val displayName: String,
-    val fleetClass: RiderFleetClass,
-    val availability: RiderAvailability,
+    val fleetClass: RiderFleetClass?,
+    val availability: RiderAvailability?,
     val serviceZone: String,
     val payoutProvider: String?,
-    val kycApproved: Boolean,
+    val kycApproved: Boolean?,
 )
 
 data class RiderMission(

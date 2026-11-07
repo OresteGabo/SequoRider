@@ -28,7 +28,6 @@ import dev.orestegabo.sequorider.core.auth.AuthApiException
 import dev.orestegabo.sequorider.core.auth.AuthRepository
 import dev.orestegabo.sequorider.core.auth.AuthUserMessage
 import dev.orestegabo.sequorider.core.auth.CurrentUser
-import dev.orestegabo.sequorider.core.auth.DemoRiderSessionRepository
 import dev.orestegabo.sequorider.core.auth.GoogleSignInFailureReason
 import dev.orestegabo.sequorider.core.auth.GoogleSignInResult
 import dev.orestegabo.sequorider.core.auth.SecureSessionCache
@@ -87,13 +86,16 @@ fun SequoRiderShell(
         )
     }
     val scope = rememberCoroutineScope()
-    val sessionRepository = remember { DemoRiderSessionRepository() }
-    val profile = remember { sessionRepository.currentProfile() }
     var signedInUser by remember { mutableStateOf<CurrentUser?>(null) }
     var accessToken by remember { mutableStateOf<String?>(null) }
     var useLocalDemo by remember { mutableStateOf(false) }
+    val profile = if (useLocalDemo) DemoRiderData.profile else dev.orestegabo.sequorider.model.RiderProfile(
+        riderId = signedInUser?.id.orEmpty(),
+        displayName = signedInUser?.displayName.orEmpty(),
+        fleetClass = null, availability = null, serviceZone = "", payoutProvider = null, kycApproved = null,
+    )
     val missionRepository = remember(signedInUser, accessToken, useLocalDemo) {
-        if (signedInUser != null && !useLocalDemo && !accessToken.isNullOrBlank()) {
+        if (!useLocalDemo) {
             NetworkRiderMissionRepository(
                 RiderMissionApiClient(accessTokenProvider = { accessToken }),
             )
@@ -102,7 +104,7 @@ fun SequoRiderShell(
         }
     }
     val payoutRepository = remember(signedInUser, accessToken, useLocalDemo) {
-        if (signedInUser != null && !useLocalDemo && !accessToken.isNullOrBlank()) {
+        if (!useLocalDemo) {
             NetworkRiderPayoutRepository(
                 RiderPayoutApiClient(accessTokenProvider = { accessToken }),
             )
@@ -111,7 +113,7 @@ fun SequoRiderShell(
         }
     }
     val notificationsRepository: RiderNotificationsRepository = remember(signedInUser, accessToken, useLocalDemo) {
-        if (signedInUser != null && !useLocalDemo && !accessToken.isNullOrBlank()) {
+        if (!useLocalDemo) {
             NetworkRiderNotificationsRepository(
                 RiderNotificationsApiClient(accessTokenProvider = { accessToken }),
             )
@@ -119,17 +121,17 @@ fun SequoRiderShell(
             DemoRiderNotificationsRepository(DemoRiderData.notifications)
         }
     }
-    var missions by remember { mutableStateOf(DemoRiderData.missions) }
+    var missions by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(if (useLocalDemo) DemoRiderData.missions else emptyList<RiderMission>()) }
     var missionsLoading by remember { mutableStateOf(false) }
-    var missionsOffline by remember { mutableStateOf(false) }
+    var missionsOffline by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
     var missionActionInProgressId by remember { mutableStateOf<String?>(null) }
     var missionActionFailed by remember { mutableStateOf(false) }
     var selectedMissionId by remember { mutableStateOf<String?>(null) }
-    var payoutSummary by remember { mutableStateOf(DemoRiderData.payoutSummary) }
-    var payoutHistory by remember { mutableStateOf<List<PayoutHistoryItem>>(DemoRiderData.payoutHistory) }
+    var payoutSummary by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(if (useLocalDemo) DemoRiderData.payoutSummary else safePayoutFallbackSummary()) }
+    var payoutHistory by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(if (useLocalDemo) DemoRiderData.payoutHistory else emptyList<PayoutHistoryItem>()) }
     var payoutLoading by remember { mutableStateOf(false) }
     var payoutOffline by remember { mutableStateOf(false) }
-    var notifications by remember { mutableStateOf<List<RiderNotification>>(DemoRiderData.notifications) }
+    var notifications by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(if (useLocalDemo) DemoRiderData.notifications else emptyList<RiderNotification>()) }
     var notificationPreference by remember { mutableStateOf(RiderNotificationPreference()) }
     var notificationsLoading by remember { mutableStateOf(false) }
     var notificationsOffline by remember { mutableStateOf(false) }
@@ -151,6 +153,7 @@ fun SequoRiderShell(
     }
 
     fun refreshMissions(showLoading: Boolean = true) {
+        if (!useLocalDemo && signedInUser == null) return
         scope.launch {
             if (showLoading) missionsLoading = true
             missionActionFailed = false
@@ -167,6 +170,7 @@ fun SequoRiderShell(
     }
 
     fun refreshPayout(showLoading: Boolean = true) {
+        if (!useLocalDemo && signedInUser == null) return
         scope.launch {
             if (showLoading) payoutLoading = true
             runCatching { payoutRepository.summary() to payoutRepository.history() }
@@ -186,17 +190,17 @@ fun SequoRiderShell(
     }
 
     fun refreshNotifications(showLoading: Boolean = true) {
+        if (!useLocalDemo && signedInUser == null) return
         scope.launch {
             if (showLoading) notificationsLoading = true
             notificationActionFailed = false
             notificationPreferenceSaved = false
             runCatching { notificationsRepository.inbox(includeArchivedNotifications) }
                 .onSuccess { latest ->
-                    notifications = latest.ifEmpty { DemoRiderData.notifications }
+                    notifications = latest
                     notificationsOffline = false
                 }
                 .onFailure {
-                    notifications = DemoRiderData.notifications
                     notificationsOffline = true
                 }
             runCatching { notificationsRepository.effectivePreference(RiderNotificationPreferenceEventType.RIDER_MISSION_OFFERED) }
@@ -238,46 +242,56 @@ fun SequoRiderShell(
     }
 
     fun acceptMission(mission: RiderMission) {
-        if (missionActionInProgressId != null) return
+        if (missionActionInProgressId != null || missionsOffline || missionsLoading) return
+        missionActionInProgressId = mission.id
         scope.launch {
-            missionActionInProgressId = mission.id
-            missionActionFailed = false
-            runCatching { missionRepository.acceptMission(mission.id) }
-                .onSuccess { updated ->
-                    missions = missions.replaceMission(updated)
-                    selectedMissionId = updated.id
-                    missionsOffline = false
-                    runCatching { missionRepository.listMissions(profile.riderId) }
-                        .onSuccess { latest -> missions = latest }
-                }
-                .onFailure {
-                    missionActionFailed = true
-                }
-            missionActionInProgressId = null
+            try {
+                missionActionFailed = false
+                runCatching { missionRepository.acceptMission(mission.id) }
+                    .onSuccess { updated ->
+                        missions = missions.replaceMission(updated)
+                        selectedMissionId = updated.id
+                        missionsOffline = false
+                        runCatching { missionRepository.listMissions(profile.riderId) }
+                            .onSuccess { latest -> missions = latest }
+                            .onFailure { missionsOffline = true }
+                    }
+                    .onFailure {
+                        missionActionFailed = true
+                    }
+            } finally {
+                missionActionInProgressId = null
+            }
         }
     }
 
     fun updateMissionAction(mission: RiderMission, action: suspend () -> RiderMission) {
-        if (missionActionInProgressId != null) return
+        if (missionActionInProgressId != null || missionsOffline || missionsLoading) return
+        missionActionInProgressId = mission.id
         scope.launch {
-            missionActionInProgressId = mission.id
-            missionActionFailed = false
-            runCatching { action() }
-                .onSuccess { updated ->
-                    missions = missions.replaceMission(updated)
-                    selectedMissionId = updated.id
-                    missionsOffline = false
-                    runCatching { missionRepository.listMissions(profile.riderId) }
-                        .onSuccess { latest -> missions = latest }
-                }
-                .onFailure {
-                    missionActionFailed = true
-                }
-            missionActionInProgressId = null
+            try {
+                missionActionFailed = false
+                runCatching { action() }
+                    .onSuccess { updated ->
+                        missions = missions.replaceMission(updated)
+                        selectedMissionId = updated.id
+                        missionsOffline = false
+                        runCatching { missionRepository.listMissions(profile.riderId) }
+                            .onSuccess { latest -> missions = latest }
+                            .onFailure { missionsOffline = true }
+                    }
+                    .onFailure {
+                        missionActionFailed = true
+                    }
+            } finally {
+                missionActionInProgressId = null
+            }
         }
     }
 
+
     LaunchedEffect(missionRepository, profile.riderId) {
+        if (!useLocalDemo && signedInUser == null) return@LaunchedEffect
         missionsLoading = true
         runCatching { missionRepository.listMissions(profile.riderId) }
             .onSuccess { latest ->
@@ -379,6 +393,7 @@ fun SequoRiderShell(
                     when (currentSection) {
                         RiderSection.Missions -> MissionsScreen(
                             missions = missions,
+                            localMode = useLocalDemo,
                             isLoading = missionsLoading,
                             isOffline = missionsOffline,
                             actionInProgressMissionId = missionActionInProgressId,
@@ -393,8 +408,8 @@ fun SequoRiderShell(
                             modifier = Modifier.fillMaxSize(),
                         )
                         RiderSection.ActiveRoute -> ActiveRouteScreen(
-                            mission = missions.firstOrNull { it.id == selectedMissionId } ?: missions.firstOrNull(),
-                            actionInProgress = missionActionInProgressId != null,
+                            mission = missions.firstOrNull { it.id == selectedMissionId },
+                            actionInProgress = missionActionInProgressId != null || missionsOffline || missionsLoading,
                             actionFailed = missionActionFailed,
                             onStartPickup = { mission ->
                                 updateMissionAction(mission) {
@@ -405,7 +420,7 @@ fun SequoRiderShell(
                                 updateMissionAction(mission) {
                                     missionRepository.markPickedUp(
                                         mission.id,
-                                        proofMetadata = custodyNote.ifBlank { "seller-pickup-confirmed" },
+                                        proofMetadata = custodyNote.takeIf { it.isNotBlank() },
                                         idempotencyKey = mission.idempotencyKey("pickup"),
                                     )
                                 }
@@ -419,7 +434,7 @@ fun SequoRiderShell(
                                 updateMissionAction(mission) {
                                     missionRepository.markDelivered(
                                         mission.id,
-                                        proofMetadata = deliveryNote.ifBlank { "customer-delivery-confirmed" },
+                                        proofMetadata = deliveryNote.takeIf { it.isNotBlank() },
                                         deliveryPin = deliveryPin.ifBlank { null },
                                         idempotencyKey = mission.idempotencyKey("deliver"),
                                     )
@@ -443,6 +458,7 @@ fun SequoRiderShell(
                         )
                         RiderSection.History -> HistoryScreen(
                             missions = missions,
+                            localMode = useLocalDemo,
                             isLoading = missionsLoading,
                             isOffline = missionsOffline,
                             onRefresh = { refreshMissions() },

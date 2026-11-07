@@ -42,6 +42,7 @@ fun MissionsScreen(
     onAcceptMission: (RiderMission) -> Unit,
     onRouteClick: (RiderMission) -> Unit,
     modifier: Modifier = Modifier,
+    localMode: Boolean = false,
 ) {
     val activeOffers = missions.count { it.status == MissionStatus.OFFERED_TO_COURIER }
     var selectedFilter by remember { mutableStateOf(MissionFilter.Available) }
@@ -62,7 +63,8 @@ fun MissionsScreen(
                     when {
                         isLoading -> appText(RiderText.LoadingMissions)
                         isOffline -> appText(RiderText.OfflineMissions)
-                        else -> appText(RiderText.NoServerActions)
+                        localMode -> appText(RiderText.NoServerActions)
+                        else -> appText(RiderText.MissionDataLoaded)
                     },
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -107,7 +109,7 @@ fun MissionsScreen(
         items(filteredMissions.size) { index ->
             MissionCard(
                 mission = filteredMissions[index],
-                actionInProgress = actionInProgressMissionId == filteredMissions[index].id,
+                actionInProgress = actionInProgressMissionId != null || isOffline || isLoading,
                 onAcceptMission = onAcceptMission,
                 onRouteClick = onRouteClick,
             )

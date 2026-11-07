@@ -1,5 +1,6 @@
 package dev.orestegabo.sequorider.core.missions
 
+import dev.orestegabo.sequorider.core.network.NetworkConfig
 import dev.orestegabo.sequorider.model.CourierAvailabilityState
 import dev.orestegabo.sequorider.model.CourierAvailabilityStatus
 import dev.orestegabo.sequorider.model.DropoffStop
@@ -19,6 +20,7 @@ import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
 import io.ktor.client.request.bearerAuth
+import io.ktor.http.contentType
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -29,7 +31,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 class RiderMissionApiClient(
-    private val baseUrl: String = ProductionBaseUrl,
+    private val baseUrl: String = NetworkConfig.ProductionBaseUrl,
     private val accessTokenProvider: () -> String?,
     private val httpClient: HttpClient = createMissionHttpClient(),
 ) {
@@ -82,6 +84,7 @@ class RiderMissionApiClient(
         httpClient.post(apiUrl("rider/missions/$missionId/$action")) {
             bearer()
             accept(ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
             if (body != null) setBody(body)
         }.body<DeliveryMissionDto>().toModel()
 
@@ -133,7 +136,7 @@ class NetworkRiderMissionRepository(
         apiClient.courierAvailability(courierId)
 
     override fun activeRoute() =
-        dev.orestegabo.sequorider.model.DemoRiderData.routePlan
+        dev.orestegabo.sequorider.model.RiderRoutePlan("", "", "", "", 0, emptyList())
 }
 
 @Serializable
@@ -157,11 +160,15 @@ private data class DeliveryMissionDto(
     val problemMetadata: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,
+    val packageCount: Int = 0,
+    val pickupName: String? = null,
+    val dropoffArea: String? = null,
+    val homeDestination: HomeDestinationDto? = null,
 ) {
     fun toModel(): RiderMission {
         val pickup = PickupStop(
             id = merchantSubOrderId ?: id,
-            title = merchantSubOrderId ?: deliveryCode,
+            title = pickupName ?: merchantSubOrderId ?: deliveryCode,
             area = "",
             merchantSubOrderId = merchantSubOrderId,
             completed = pickupAt != null,
@@ -169,8 +176,8 @@ private data class DeliveryMissionDto(
         val dropoff = DropoffStop(
             id = "$id-dropoff",
             destinationType = destinationType,
-            title = destinationType.name,
-            area = "",
+            title = homeDestination?.recipientName ?: destinationType.name,
+            area = homeDestination?.let { listOfNotNull(it.streetHint, it.area, it.city).joinToString(", ") } ?: dropoffArea.orEmpty(),
             completed = deliveredAt != null,
         )
         return RiderMission(
@@ -192,14 +199,16 @@ private data class DeliveryMissionDto(
             pickupName = pickup.title,
             pickupArea = pickup.area,
             dropoffArea = dropoff.title,
-            packageCount = 1,
+            packageCount = packageCount,
             distanceKm = "",
             etaMinutes = 0,
             expectedPayoutCfa = courierFeeCfa,
             customerDeliveryFeeCfa = customerDeliveryFeeCfa,
             shortfallCfa = shortfallCfa,
             slaLabel = status.name,
-            customerDeliveryNote = null,
+            customerDeliveryNote = homeDestination?.let {
+                listOfNotNull(it.recipientName, it.phoneNumber, it.streetHint).joinToString(" · ")
+            },
             assignedAt = assignedAt,
             acceptedAt = acceptedAt,
             pickupAt = pickupAt,
@@ -284,4 +293,10 @@ class RiderMissionApiException(
     cause: Throwable,
 ) : Exception("Rider mission API request failed.", cause)
 
-private const val ProductionBaseUrl = "https://api.sequoservice.com"
+
+
+@Serializable
+private data class HomeDestinationDto(
+    val recipientName: String, val phoneNumber: String, val city: String,
+    val area: String? = null, val streetHint: String? = null,
+)

@@ -53,7 +53,7 @@ fun PayoutScreen(
                     when {
                         isLoading -> appText(RiderText.PayoutLoading)
                         isOffline -> appText(RiderText.PayoutOffline)
-                        else -> summary.message ?: appText(RiderText.PayoutLocalDemo)
+                        else -> summary.message ?: appText(RiderText.NotAvailableYet)
                     },
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
