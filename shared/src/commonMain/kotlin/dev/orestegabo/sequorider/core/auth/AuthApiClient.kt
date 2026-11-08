@@ -28,7 +28,28 @@ class AuthApiClient(
     private val baseUrl: String = NetworkConfig.BaseUrl,
     private val httpClient: HttpClient = createAuthHttpClient(),
     private val deviceIdProvider: () -> String,
+    private val environment: String = NetworkConfig.Environment,
 ) {
+    suspend fun developmentAccess(): DevelopmentRiderAccess {
+        if (!developmentRiderAccessAllowed(environment, baseUrl)) return DevelopmentRiderAccess()
+        val access: DevelopmentRiderAccess = httpClient.get(apiUrl("auth/development-access")) {
+            url { parameters.append("appSource", "SEQUO_RIDER") }
+        }.body()
+        return access.takeIf { it.enabled && it.mode == "LOCAL_FIXTURE" && it.accounts.isNotEmpty() &&
+            it.accounts.all { account -> account.key in setOf("senam", "komlan") && account.label.isNotBlank() } &&
+            it.accounts.map { account -> account.key }.distinct().size == it.accounts.size } ?: DevelopmentRiderAccess()
+    }
+
+    suspend fun loginWithFixture(accountKey: String): AuthSession {
+        require(developmentRiderAccessAllowed(environment, baseUrl)) { "Local fixture access is disabled." }
+        val access = developmentAccess()
+        require(access.enabled && access.accounts.any { it.key == accountKey }) { "Local fixture account is unavailable." }
+        return httpClient.post(apiUrl("auth/development-session")) {
+            headers { append(HttpHeaders.ContentType, ContentType.Application.Json.toString()) }
+            setBody(DevelopmentRiderSessionRequest(appSource = "SEQUO_RIDER", accountKey = accountKey, deviceId = deviceIdProvider()))
+        }.body()
+    }
+
     suspend fun loginWithGoogle(idToken: String): AuthApiResponse =
         loginWithSocialToken(SocialLoginProvider.Google, idToken)
 
@@ -261,3 +282,17 @@ private enum class AppSource {
     @SerialName("SEQUO_RIDER")
     SequoRider,
 }
+
+/** Capability lookup is never attempted from staging/production or a nonlocal build target. */
+internal fun developmentRiderAccessAllowed(environment: String, baseUrl: String): Boolean =
+    environment == "LOCAL_FIXTURE" &&
+        Regex("""https?://(?:127\.0\.0\.1|10\.0\.2\.2|localhost|\[::1\])(?::[0-9]{1,5})?/?""").matches(baseUrl)
+
+@Serializable
+data class DevelopmentRiderAccount(val key: String, val label: String)
+@Serializable
+data class DevelopmentRiderAccess(val enabled: Boolean = false, val mode: String? = null,
+    val accounts: List<DevelopmentRiderAccount> = emptyList())
+@Serializable
+private data class DevelopmentRiderSessionRequest(val appSource: String, val accountKey: String,
+    val deviceId: String, val deviceLabel: String = "SEQUO Rider local fixture")

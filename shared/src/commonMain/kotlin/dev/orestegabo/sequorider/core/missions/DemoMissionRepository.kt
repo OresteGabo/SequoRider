@@ -8,6 +8,7 @@ import dev.orestegabo.sequorider.model.RiderMission
 import dev.orestegabo.sequorider.model.RiderRoutePlan
 
 interface RiderMissionRepository {
+    fun close() = Unit
     suspend fun listMissions(courierId: String? = null, status: MissionStatus? = null): List<RiderMission>
     suspend fun getMission(missionId: String): RiderMission?
     suspend fun acceptMission(missionId: String): RiderMission

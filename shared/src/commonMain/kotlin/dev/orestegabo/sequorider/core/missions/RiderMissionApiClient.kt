@@ -105,6 +105,7 @@ class RiderMissionApiClient(
 class NetworkRiderMissionRepository(
     private val apiClient: RiderMissionApiClient,
 ) : RiderMissionRepository {
+    override fun close() = apiClient.close()
     override suspend fun listMissions(courierId: String?, status: MissionStatus?): List<RiderMission> =
         apiClient.listMissions(courierId, status)
 

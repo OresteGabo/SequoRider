@@ -64,6 +64,9 @@ enum class RiderText {
     ContinueWithGoogle,
     ContinueLocalDemo,
     SignOut,
+    ExitDemo,
+    LocalFixtureAccounts,
+    LocalFixtureDetail,
     SigningIn,
     AuthGoogleNotConfigured,
     AuthGoogleUnavailable,
@@ -96,6 +99,14 @@ enum class RiderText {
     Distance,
     EtaSla,
     Status,
+    StatusCreated,
+    StatusOffered,
+    StatusAccepted,
+    StatusPickedUp,
+    StatusAtRelay,
+    StatusReleased,
+    StatusProblem,
+    StatusCancelled,
     NotAvailableYet,
     MissionActionFailed,
     MissionDetail,
@@ -296,11 +307,11 @@ private val englishText = mapOf(
     RiderText.Fleet to "Fleet",
     RiderText.ServiceZone to "Service zone",
     RiderText.KycApproved to "KYC approved",
-    RiderText.TodayMissions to "Today's missions",
+    RiderText.TodayMissions to "Loaded missions",
     RiderText.ActiveOffers to "Active offers",
     RiderText.NextPickup to "Next pickup",
     RiderText.ViewRoute to "View route",
-    RiderText.NoServerActions to "Demo data only. Mission actions are not connected to the server yet.",
+    RiderText.NoServerActions to "Demo data only. Mission actions stay on this device.",
     RiderText.RouteSummary to "Route summary",
     RiderText.Stops to "Stops",
     RiderText.Completed to "Completed",
@@ -336,6 +347,9 @@ private val englishText = mapOf(
     RiderText.ContinueWithGoogle to "Continue with Google",
     RiderText.ContinueLocalDemo to "Continue in local demo",
     RiderText.SignOut to "Sign out",
+    RiderText.ExitDemo to "Exit demo",
+    RiderText.LocalFixtureAccounts to "Local test accounts",
+    RiderText.LocalFixtureDetail to "Synthetic server records. Actions are saved locally; no money moves.",
     RiderText.SigningIn to "Signing in...",
     RiderText.AuthGoogleNotConfigured to "Google sign-in is not configured for this build.",
     RiderText.AuthGoogleUnavailable to "Google sign-in is unavailable. Please try again later.",
@@ -368,6 +382,15 @@ private val englishText = mapOf(
     RiderText.Distance to "Distance",
     RiderText.EtaSla to "ETA / SLA",
     RiderText.Status to "Status",
+    RiderText.StatusCreated to "Awaiting assignment",
+    RiderText.StatusOffered to "Mission offered",
+    RiderText.StatusAccepted to "Accepted",
+    RiderText.StatusPickedUp to "Collected",
+    RiderText.StatusAtRelay to "At relay",
+    RiderText.StatusReleased to "Released",
+    RiderText.StatusProblem to "Problem reported",
+    RiderText.StatusCancelled to "Cancelled",
+
     RiderText.NotAvailableYet to "Not available yet",
     RiderText.MissionActionFailed to "Mission action could not be completed.",
     RiderText.MissionDetail to "Mission detail",
@@ -443,7 +466,7 @@ private val englishText = mapOf(
     RiderText.HistoryFilterCompleted to "Completed",
     RiderText.HistoryFilterProblems to "Problems",
     RiderText.HistoryFilterCancelled to "Cancelled",
-    RiderText.HistoryLocalDemo to "Local/demo history shown until server history is connected.",
+    RiderText.HistoryLocalDemo to "Local demo history. These missions are not server records.",
     RiderText.HistoryEmpty to "No history for this filter.",
     RiderText.CompletionTime to "Completion time",
     RiderText.IssueStatus to "Issue status",
@@ -534,11 +557,11 @@ private val frenchText = mapOf(
     RiderText.Fleet to "Flotte",
     RiderText.ServiceZone to "Zone de service",
     RiderText.KycApproved to "KYC approuve",
-    RiderText.TodayMissions to "Missions du jour",
+    RiderText.TodayMissions to "Missions chargées",
     RiderText.ActiveOffers to "Offres actives",
     RiderText.NextPickup to "Prochain retrait",
     RiderText.ViewRoute to "Voir le trajet",
-    RiderText.NoServerActions to "Donnees demo uniquement. Les actions mission ne sont pas encore reliees au serveur.",
+    RiderText.NoServerActions to "Données de démo uniquement. Les actions restent sur cet appareil.",
     RiderText.RouteSummary to "Resume du trajet",
     RiderText.Stops to "Arrets",
     RiderText.Completed to "Termine",
@@ -574,6 +597,9 @@ private val frenchText = mapOf(
     RiderText.ContinueWithGoogle to "Continuer avec Google",
     RiderText.ContinueLocalDemo to "Continuer en demo locale",
     RiderText.SignOut to "Se deconnecter",
+    RiderText.ExitDemo to "Quitter la démo",
+    RiderText.LocalFixtureAccounts to "Comptes de test locaux",
+    RiderText.LocalFixtureDetail to "Données de test sur le serveur local. Les actions sont enregistrées ; aucun transfert d’argent.",
     RiderText.SigningIn to "Connexion...",
     RiderText.AuthGoogleNotConfigured to "La connexion Google n'est pas configuree pour cette version.",
     RiderText.AuthGoogleUnavailable to "La connexion Google est indisponible. Reessayez plus tard.",
@@ -606,6 +632,15 @@ private val frenchText = mapOf(
     RiderText.Distance to "Distance",
     RiderText.EtaSla to "ETA / SLA",
     RiderText.Status to "Statut",
+    RiderText.StatusCreated to "À attribuer",
+    RiderText.StatusOffered to "Mission proposée",
+    RiderText.StatusAccepted to "Acceptée",
+    RiderText.StatusPickedUp to "Colis retiré",
+    RiderText.StatusAtRelay to "Au relais",
+    RiderText.StatusReleased to "Remis au client",
+    RiderText.StatusProblem to "Incident signalé",
+    RiderText.StatusCancelled to "Annulée",
+
     RiderText.NotAvailableYet to "Pas encore disponible",
     RiderText.MissionActionFailed to "Action mission impossible.",
     RiderText.MissionDetail to "Detail mission",
@@ -681,7 +716,7 @@ private val frenchText = mapOf(
     RiderText.HistoryFilterCompleted to "Terminees",
     RiderText.HistoryFilterProblems to "Problemes",
     RiderText.HistoryFilterCancelled to "Annulees",
-    RiderText.HistoryLocalDemo to "Historique local/demo affiche jusqu'a la connexion serveur.",
+    RiderText.HistoryLocalDemo to "Historique de démo locale. Ces missions ne sont pas enregistrées sur le serveur.",
     RiderText.HistoryEmpty to "Aucun historique pour ce filtre.",
     RiderText.CompletionTime to "Heure de fin",
     RiderText.IssueStatus to "Statut incident",
@@ -744,3 +779,20 @@ fun missionModeText(mode: String?, legacy: String): String = when (mode) {
 @Composable
 fun missionWorkforceText(workforce: String): String = appText(
     if (workforce == "SequoSalaried") RiderText.WorkforceSequo else RiderText.WorkforceIndependent)
+
+fun missionStatusText(status: dev.orestegabo.sequorider.model.MissionStatus, language: AppLanguage): String = appText(
+    when (status) {
+        dev.orestegabo.sequorider.model.MissionStatus.CREATED -> RiderText.StatusCreated
+        dev.orestegabo.sequorider.model.MissionStatus.OFFERED_TO_COURIER -> RiderText.StatusOffered
+        dev.orestegabo.sequorider.model.MissionStatus.ACCEPTED_BY_COURIER -> RiderText.StatusAccepted
+        dev.orestegabo.sequorider.model.MissionStatus.PICKED_UP_FROM_SELLER -> RiderText.StatusPickedUp
+        dev.orestegabo.sequorider.model.MissionStatus.DEPOSITED_AT_RELAY -> RiderText.StatusAtRelay
+        dev.orestegabo.sequorider.model.MissionStatus.HANDED_TO_SEQUO -> RiderText.ConsolidationReceived
+        dev.orestegabo.sequorider.model.MissionStatus.DELIVERED_TO_CUSTOMER -> RiderText.Delivered
+        dev.orestegabo.sequorider.model.MissionStatus.RELEASED_BY_RELAY -> RiderText.StatusReleased
+        dev.orestegabo.sequorider.model.MissionStatus.PROBLEM_REPORTED -> RiderText.StatusProblem
+        dev.orestegabo.sequorider.model.MissionStatus.CANCELLED -> RiderText.StatusCancelled
+    }, language)
+
+@Composable
+fun missionStatusText(status: dev.orestegabo.sequorider.model.MissionStatus): String = missionStatusText(status, LocalAppLanguage.current)

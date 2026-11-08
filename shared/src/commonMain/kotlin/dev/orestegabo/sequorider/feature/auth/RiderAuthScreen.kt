@@ -1,5 +1,8 @@
 package dev.orestegabo.sequorider.feature.auth
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import dev.orestegabo.sequorider.core.auth.DevelopmentRiderAccount
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,10 +25,12 @@ fun RiderAuthScreen(
     errorMessage: String?,
     onGoogleLogin: () -> Unit,
     onLocalDemo: () -> Unit,
+    fixtureAccounts: List<DevelopmentRiderAccount> = emptyList(),
+    onFixtureLogin: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     RiderCard(modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(appText(RiderText.AuthTitle), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(appText(RiderText.AuthDetail), color = MaterialTheme.colorScheme.onSurfaceVariant)
             errorMessage?.let {
@@ -44,6 +49,14 @@ fun RiderAuthScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(appText(RiderText.ContinueLocalDemo))
+            }
+            if (fixtureAccounts.isNotEmpty()) {
+                Text(appText(RiderText.LocalFixtureAccounts), style = MaterialTheme.typography.titleSmall)
+                Text(appText(RiderText.LocalFixtureDetail), style = MaterialTheme.typography.bodySmall)
+                fixtureAccounts.forEach { account ->
+                    OutlinedButton(onClick = { onFixtureLogin(account.key) }, enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth()) { Text(account.label) }
+                }
             }
             Text(appText(RiderText.TemporaryDevContext), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

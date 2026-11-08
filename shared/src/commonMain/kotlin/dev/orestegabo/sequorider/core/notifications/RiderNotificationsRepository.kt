@@ -5,6 +5,7 @@ import dev.orestegabo.sequorider.model.RiderNotificationPreference
 import dev.orestegabo.sequorider.model.RiderNotificationPreferenceEventType
 
 interface RiderNotificationsRepository {
+    fun close() = Unit
     suspend fun registerFcmToken(deviceId: String, fcmToken: String, platform: String): Unit
     suspend fun revokeDevice(deviceId: String): Unit
     suspend fun inbox(includeArchived: Boolean = false): List<RiderNotification>
@@ -18,6 +19,7 @@ interface RiderNotificationsRepository {
 class NetworkRiderNotificationsRepository(
     private val apiClient: RiderNotificationsApiClient,
 ) : RiderNotificationsRepository {
+    override fun close() = apiClient.close()
     override suspend fun registerFcmToken(deviceId: String, fcmToken: String, platform: String) {
         apiClient.registerFcmToken(deviceId, fcmToken, platform)
     }

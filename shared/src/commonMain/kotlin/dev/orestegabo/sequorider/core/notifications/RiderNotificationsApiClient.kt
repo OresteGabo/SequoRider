@@ -21,6 +21,8 @@ class RiderNotificationsApiClient(
     private val accessTokenProvider: () -> String?,
     private val httpClient: HttpClient = createSequoHttpClient(baseUrl = baseUrl),
 ) {
+    fun close() = httpClient.close()
+
     suspend fun registerFcmToken(
         deviceId: String,
         fcmToken: String,
