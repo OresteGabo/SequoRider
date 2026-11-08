@@ -50,6 +50,7 @@ import dev.orestegabo.sequorider.core.network.SequoApiException
 import dev.orestegabo.sequorider.model.PayoutSummary
 import dev.orestegabo.sequorider.feature.auth.RiderAuthScreen
 import dev.orestegabo.sequorider.feature.settings.AccountSettingsScreen
+import dev.orestegabo.sequorider.feature.settings.rememberRiderLanguagePreferences
 import dev.orestegabo.sequorider.feature.settings.AppLanguage
 import dev.orestegabo.sequorider.feature.settings.LocalAppLanguage
 import dev.orestegabo.sequorider.feature.settings.RiderText
@@ -86,7 +87,8 @@ fun SequoRiderShell(
     modifier: Modifier = Modifier,
 ) {
     var currentSection by remember { mutableStateOf(RiderSection.Missions) }
-    var language by remember { mutableStateOf(AppLanguage.English) }
+    val languagePreferences = rememberRiderLanguagePreferences()
+    var language by remember(languagePreferences) { mutableStateOf(languagePreferences.load()) }
     val deviceId = rememberAuthDeviceId()
     val sessionStore = rememberAuthSessionStore()
     val secureTokenStorage = rememberSecureTokenStorage()
@@ -559,7 +561,7 @@ fun SequoRiderShell(
                         RiderSection.Account -> AccountSettingsScreen(
                             profile = profile,
                             language = language,
-                            onLanguageChange = { language = it },
+                            onLanguageChange = { languagePreferences.save(it); language = it },
                             notifications = notifications,
                             notificationPreference = notificationPreference,
                             notificationsLoading = notificationsLoading,
