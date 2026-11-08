@@ -108,7 +108,7 @@ fun ActiveRouteScreen(
                 Text(appText(RiderText.MissionDetail), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(mission.code, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                    RiderStatusPill(mission.status.name)
+                    RiderStatusPill(if (mission.status == MissionStatus.HANDED_TO_SEQUO) appText(RiderText.ConsolidationReceived) else mission.status.name)
                 }
                 if (actionFailed) {
                     Text(appText(RiderText.MissionActionFailed), color = MaterialTheme.colorScheme.error)
@@ -160,7 +160,7 @@ fun ActiveRouteScreen(
                     },
                 )
             }
-        } else {
+        } else if (mission.destinationType == MissionDestinationType.RELAY_POINT) {
             item {
                 RelayDepositPanel(
                     mission = mission,
@@ -171,6 +171,17 @@ fun ActiveRouteScreen(
                     onLockerSlotChange = { lockerSlot = sanitizePickupText(it, MaxLockerSlotLength) },
                     onConfirmRelayDeposit = { onConfirmRelayDeposit(mission, packageCode, lockerSlot) },
                 )
+            }
+        }
+
+        if (mission.destinationType == MissionDestinationType.SEQUO_CONSOLIDATION) {
+            item {
+                RiderCard {
+                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(mission.dropoffStop.title, style = MaterialTheme.typography.titleMedium)
+                        Text(appText(if (mission.status == MissionStatus.HANDED_TO_SEQUO) RiderText.ConsolidationReceived else RiderText.ConsolidationReceiptPending))
+                    }
+                }
             }
         }
 
@@ -308,27 +319,29 @@ fun ActiveRouteScreen(
                         Text(appText(RiderText.MarkPickupDone))
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(
-                        onClick = { onStartDelivery(mission) },
-                        modifier = Modifier.weight(1f),
-                        enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER,
-                    ) {
-                        Text(appText(RiderText.StartDelivery))
-                    }
-                    Button(
-                        onClick = {
-                            if (mission.destinationType == MissionDestinationType.RELAY_POINT) {
-                                onConfirmRelayDeposit(mission, packageCode, lockerSlot)
-                            } else {
-                                onConfirmDelivery(mission, deliveryPin, deliveryProblemReason)
-                            }
-                        },
-                        enabled = !actionInProgress && mission.canConfirmDropoff(deliveryPin) &&
-                            (mission.destinationType != MissionDestinationType.RELAY_POINT || lockerSlot.isNotBlank()),
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(if (mission.destinationType == MissionDestinationType.RELAY_POINT) appText(RiderText.ConfirmRelayDeposit) else appText(RiderText.ConfirmDelivery))
+                if (mission.destinationType != MissionDestinationType.SEQUO_CONSOLIDATION) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedButton(
+                            onClick = { onStartDelivery(mission) },
+                            modifier = Modifier.weight(1f),
+                            enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER,
+                        ) {
+                            Text(appText(RiderText.StartDelivery))
+                        }
+                        Button(
+                            onClick = {
+                                if (mission.destinationType == MissionDestinationType.RELAY_POINT) {
+                                    onConfirmRelayDeposit(mission, packageCode, lockerSlot)
+                                } else {
+                                    onConfirmDelivery(mission, deliveryPin, deliveryProblemReason)
+                                }
+                            },
+                            enabled = !actionInProgress && mission.canConfirmDropoff(deliveryPin) &&
+                                (mission.destinationType != MissionDestinationType.RELAY_POINT || lockerSlot.isNotBlank()),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(if (mission.destinationType == MissionDestinationType.RELAY_POINT) appText(RiderText.ConfirmRelayDeposit) else appText(RiderText.ConfirmDelivery))
+                        }
                     }
                 }
                 OutlinedButton(
@@ -525,10 +538,11 @@ private fun TimelineRow(label: String, value: String?) {
 
 @Composable
 private fun RiderMission.pickupSourceLabel(): String =
-    when (destinationType) {
-        MissionDestinationType.SEQUO_CONSOLIDATION -> appText(RiderText.PickupSourceSequo)
-        MissionDestinationType.RELAY_POINT -> appText(RiderText.PickupSourceHub)
-        MissionDestinationType.CUSTOMER_ADDRESS -> appText(RiderText.PickupSourceMerchant)
+    when (pickupSource ?: "MERCHANT".takeIf { merchantSubOrderId != null }) {
+        "SEQUO_CONSOLIDATION" -> appText(RiderText.PickupSourceSequo)
+        "MERCHANT" -> appText(RiderText.PickupSourceMerchant)
+        "RELAY_POINT" -> appText(RiderText.PickupSourceHub)
+        else -> appText(RiderText.NotAvailableYet)
     }
 
 @Composable
@@ -576,7 +590,7 @@ private val problemReportableStatuses = setOf(
 )
 
 private fun RiderMission.canConfirmDropoff(deliveryPin: String): Boolean =
-    status == MissionStatus.PICKED_UP_FROM_SELLER &&
+    status == MissionStatus.PICKED_UP_FROM_SELLER && destinationType != MissionDestinationType.SEQUO_CONSOLIDATION &&
         (destinationType != MissionDestinationType.CUSTOMER_ADDRESS ||
             ProofRequirement.DELIVERY_PIN !in proofRequirements ||
             deliveryPin.length == MaxDeliveryPinLength)

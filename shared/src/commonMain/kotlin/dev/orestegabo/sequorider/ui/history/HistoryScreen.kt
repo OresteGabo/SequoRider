@@ -71,7 +71,7 @@ fun HistoryScreen(
             RiderCard {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RiderMetric(appText(RiderText.Delivered), historyMissions.count { it.status.isCompletedHistory() }.toString(), Modifier.weight(1f))
+                        RiderMetric(appText(RiderText.Completed), historyMissions.count { it.status.isCompletedHistory() }.toString(), Modifier.weight(1f))
                         RiderMetric(appText(RiderText.Failed), historyMissions.count { it.status.isProblemHistory() }.toString(), Modifier.weight(1f))
                     }
                     RiderKeyValueRow(appText(RiderText.Returned), "0")
@@ -120,7 +120,7 @@ private fun HistoryMissionCard(mission: RiderMission) {
                     Text(mission.code, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Text("${mission.pickupArea} -> ${mission.dropoffArea}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                RiderStatusPill(mission.status.name)
+                RiderStatusPill(if (mission.status == MissionStatus.HANDED_TO_SEQUO) appText(RiderText.ConsolidationReceived) else mission.status.name)
             }
             RiderKeyValueRow(appText(RiderText.PickupStops), mission.pickupStops.joinToString { it.title })
             RiderKeyValueRow(appText(RiderText.DropoffStop), mission.dropoffStop.title)
@@ -133,7 +133,7 @@ private fun HistoryMissionCard(mission: RiderMission) {
 
 private enum class HistoryFilter(val statuses: Set<MissionStatus>) {
     All(historyStatuses),
-    Completed(setOf(MissionStatus.DELIVERED_TO_CUSTOMER, MissionStatus.RELEASED_BY_RELAY)),
+    Completed(setOf(MissionStatus.DELIVERED_TO_CUSTOMER, MissionStatus.RELEASED_BY_RELAY, MissionStatus.HANDED_TO_SEQUO)),
     Problems(setOf(MissionStatus.PROBLEM_REPORTED)),
     Cancelled(setOf(MissionStatus.CANCELLED)),
 }
@@ -148,7 +148,7 @@ private fun HistoryFilter.label(): String =
     }
 
 private fun MissionStatus.isCompletedHistory(): Boolean =
-    this == MissionStatus.DELIVERED_TO_CUSTOMER || this == MissionStatus.RELEASED_BY_RELAY
+    this == MissionStatus.DELIVERED_TO_CUSTOMER || this == MissionStatus.RELEASED_BY_RELAY || this == MissionStatus.HANDED_TO_SEQUO
 
 private fun MissionStatus.isProblemHistory(): Boolean =
     this == MissionStatus.PROBLEM_REPORTED || this == MissionStatus.CANCELLED
@@ -165,6 +165,7 @@ private fun RiderMission.completionTime(): String =
     deliveredAt ?: relayDepositedAt ?: updatedAt ?: createdAt ?: "-"
 
 private val historyStatuses = setOf(
+    MissionStatus.HANDED_TO_SEQUO,
     MissionStatus.DELIVERED_TO_CUSTOMER,
     MissionStatus.RELEASED_BY_RELAY,
     MissionStatus.PROBLEM_REPORTED,

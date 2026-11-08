@@ -26,6 +26,7 @@ enum class MissionStatus {
     ACCEPTED_BY_COURIER,
     PICKED_UP_FROM_SELLER,
     DEPOSITED_AT_RELAY,
+    HANDED_TO_SEQUO,
     DELIVERED_TO_CUSTOMER,
     RELEASED_BY_RELAY,
     PROBLEM_REPORTED,
@@ -123,6 +124,7 @@ data class RiderMission(
     val updatedAt: String? = null,
     val relayPointId: String? = null,
     val deliveryOptionId: String? = null,
+    val pickupSource: String? = null,
     val assignmentWorkforceType: String? = null,
 )
 

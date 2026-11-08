@@ -134,7 +134,7 @@ private fun MissionCard(
                     Text(mission.pickupName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text("${mission.pickupArea} -> ${mission.dropoffArea}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                RiderStatusPill(mission.status.name)
+                RiderStatusPill(if (mission.status == MissionStatus.HANDED_TO_SEQUO) appText(RiderText.ConsolidationReceived) else mission.status.name)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RiderMetric(appText(RiderText.MissionType), missionModeText(mission.deliveryOptionId, mission.serviceType.name), Modifier.weight(1f))
@@ -175,7 +175,7 @@ private enum class MissionFilter(val statuses: Set<MissionStatus>) {
     Available(setOf(MissionStatus.OFFERED_TO_COURIER, MissionStatus.CREATED)),
     Assigned(setOf(MissionStatus.ACCEPTED_BY_COURIER)),
     Active(setOf(MissionStatus.PICKED_UP_FROM_SELLER, MissionStatus.DEPOSITED_AT_RELAY)),
-    Completed(setOf(MissionStatus.DELIVERED_TO_CUSTOMER, MissionStatus.RELEASED_BY_RELAY)),
+    Completed(setOf(MissionStatus.DELIVERED_TO_CUSTOMER, MissionStatus.RELEASED_BY_RELAY, MissionStatus.HANDED_TO_SEQUO)),
     Problem(setOf(MissionStatus.PROBLEM_REPORTED, MissionStatus.CANCELLED)),
 }
 

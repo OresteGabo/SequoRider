@@ -162,6 +162,8 @@ private data class DeliveryMissionDto(
     val updatedAt: String? = null,
     val packageCount: Int = 0,
     val pickupName: String? = null,
+    val pickupSource: String? = null,
+    val dropoffName: String? = null,
     val dropoffArea: String? = null,
     val homeDestination: HomeDestinationDto? = null,
     val relayDestination: RelayDestinationDto? = null,
@@ -179,9 +181,9 @@ private data class DeliveryMissionDto(
         val dropoff = DropoffStop(
             id = "$id-dropoff",
             destinationType = destinationType,
-            title = relayDestination?.name ?: homeDestination?.recipientName ?: destinationType.name,
+            title = dropoffName ?: relayDestination?.name ?: homeDestination?.recipientName ?: destinationType.name,
             area = relayDestination?.let { listOfNotNull(it.landmark, it.neighborhood, it.city).joinToString(", ") } ?: homeDestination?.let { listOfNotNull(it.streetHint, it.area, it.city).joinToString(", ") } ?: dropoffArea.orEmpty(),
-            completed = deliveredAt != null || relayDepositedAt != null,
+            completed = deliveredAt != null || relayDepositedAt != null || status == MissionStatus.HANDED_TO_SEQUO,
         )
         return RiderMission(
             id = id,
@@ -201,6 +203,7 @@ private data class DeliveryMissionDto(
             ),
             proofRequirements = proofRequirements(),
             pickupName = pickup.title,
+            pickupSource = pickupSource ?: "MERCHANT".takeIf { merchantSubOrderId != null },
             pickupArea = pickup.area,
             dropoffArea = dropoff.title,
             packageCount = packageCount,
@@ -232,12 +235,13 @@ private data class DeliveryMissionDto(
             MissionStatus.CREATED,
             -> emptyList()
             MissionStatus.ACCEPTED_BY_COURIER -> listOf(ProofRequirement.SELLER_PICKUP_PROOF)
-            MissionStatus.PICKED_UP_FROM_SELLER -> if (destinationType == MissionDestinationType.RELAY_POINT) {
-                listOf(ProofRequirement.RELAY_DEPOSIT_PROOF)
-            } else {
-                listOf(ProofRequirement.CUSTOMER_DELIVERY_PROOF, ProofRequirement.DELIVERY_PIN)
+            MissionStatus.PICKED_UP_FROM_SELLER -> when (destinationType) {
+                MissionDestinationType.RELAY_POINT -> listOf(ProofRequirement.RELAY_DEPOSIT_PROOF)
+                MissionDestinationType.CUSTOMER_ADDRESS -> listOf(ProofRequirement.CUSTOMER_DELIVERY_PROOF, ProofRequirement.DELIVERY_PIN)
+                MissionDestinationType.SEQUO_CONSOLIDATION -> emptyList()
             }
             MissionStatus.DEPOSITED_AT_RELAY,
+            MissionStatus.HANDED_TO_SEQUO,
             MissionStatus.DELIVERED_TO_CUSTOMER,
             MissionStatus.RELEASED_BY_RELAY,
             MissionStatus.PROBLEM_REPORTED,
