@@ -1,10 +1,13 @@
 package dev.orestegabo.sequorider.feature.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import dev.orestegabo.sequorider.core.auth.DevelopmentRiderAccount
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -12,12 +15,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.ui.components.RiderCard
+import org.jetbrains.compose.resources.painterResource
+import sequorider.shared.generated.resources.Res
+import sequorider.shared.generated.resources.rider_brand_icon
 
 @Composable
 fun RiderAuthScreen(
@@ -31,6 +38,10 @@ fun RiderAuthScreen(
 ) {
     RiderCard(modifier = modifier.fillMaxWidth()) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Image(painterResource(Res.drawable.rider_brand_icon), contentDescription = null, modifier = Modifier.size(48.dp))
+                Text(appText(RiderText.AppName), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            }
             Text(appText(RiderText.AuthTitle), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(appText(RiderText.AuthDetail), color = MaterialTheme.colorScheme.onSurfaceVariant)
             errorMessage?.let {
@@ -58,7 +69,6 @@ fun RiderAuthScreen(
                         modifier = Modifier.fillMaxWidth()) { Text(account.label) }
                 }
             }
-            Text(appText(RiderText.TemporaryDevContext), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

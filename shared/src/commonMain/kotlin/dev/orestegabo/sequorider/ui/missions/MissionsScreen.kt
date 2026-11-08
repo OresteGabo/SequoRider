@@ -31,7 +31,9 @@ import dev.orestegabo.sequorider.model.RiderMission
 import dev.orestegabo.sequorider.model.formatCfa
 import dev.orestegabo.sequorider.ui.components.RiderCard
 import dev.orestegabo.sequorider.ui.components.RiderMetric
-import dev.orestegabo.sequorider.ui.components.RiderStatusPill
+import dev.orestegabo.sequorider.ui.components.RiderMissionHeader
+import dev.orestegabo.sequorider.feature.settings.missionRouteText
+import dev.orestegabo.sequorider.feature.settings.missionEtaText
 
 @Composable
 fun MissionsScreen(
@@ -131,13 +133,26 @@ private fun MissionCard(
 ) {
     RiderCard {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(mission.code, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                    Text(mission.pickupName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(listOf(mission.pickupArea, mission.dropoffArea).filter(String::isNotBlank).joinToString(" → "), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            RiderMissionHeader(
+                reference = mission.code,
+                title = mission.pickupName,
+                route = missionRouteText(mission.pickupArea, mission.dropoffArea),
+                status = missionStatusText(mission.status),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (mission.status == MissionStatus.OFFERED_TO_COURIER) {
+                    Button(
+                        onClick = { onAcceptMission(mission) },
+                        enabled = !actionInProgress,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(appText(RiderText.AcceptMission))
+                    }
+                } else {
+                    Button(onClick = { onRouteClick(mission) }, enabled = !actionInProgress, modifier = Modifier.fillMaxWidth()) {
+                        Text(appText(RiderText.ViewRoute))
+                    }
                 }
-                RiderStatusPill(missionStatusText(mission.status))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RiderMetric(appText(RiderText.MissionType), missionModeText(mission.deliveryOptionId, mission.serviceType.name), Modifier.weight(1f))
@@ -149,24 +164,10 @@ private fun MissionCard(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RiderMetric(appText(RiderText.Distance), mission.distanceKm.ifBlank { appText(RiderText.NotAvailableYet) }, Modifier.weight(1f))
-                RiderMetric(appText(RiderText.EtaSla), mission.etaLabel(), Modifier.weight(1f))
+                RiderMetric(appText(RiderText.EtaSla), missionEtaText(mission.etaMinutes, mission.slaLabel), Modifier.weight(1f))
             }
             RiderMetric(appText(RiderText.Payout), mission.expectedPayoutCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet), Modifier.fillMaxWidth())
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (mission.status == MissionStatus.OFFERED_TO_COURIER) {
-                    Button(
-                        onClick = { onAcceptMission(mission) },
-                        enabled = !actionInProgress,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(appText(RiderText.AcceptMission))
-                    }
-                } else {
-                    Button(onClick = { onRouteClick(mission) }, enabled = !actionInProgress, modifier = Modifier.weight(1f)) {
-                        Text(appText(RiderText.ViewRoute))
-                    }
-                }
-            }
+
         }
     }
 }
@@ -187,13 +188,4 @@ private fun MissionFilter.label(): String =
         MissionFilter.Active -> appText(RiderText.MissionFilterActive)
         MissionFilter.Completed -> appText(RiderText.MissionFilterCompleted)
         MissionFilter.Problem -> appText(RiderText.MissionFilterProblem)
-    }
-
-@Composable
-private fun RiderMission.etaLabel(): String =
-    when {
-        etaMinutes > 0 && slaLabel.isNotBlank() -> "${etaMinutes} min / $slaLabel"
-        etaMinutes > 0 -> "${etaMinutes} min"
-        slaLabel.isNotBlank() -> slaLabel
-        else -> appText(RiderText.NotAvailableYet)
     }

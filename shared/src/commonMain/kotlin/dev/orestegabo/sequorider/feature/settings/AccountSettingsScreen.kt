@@ -15,6 +15,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.orestegabo.sequorider.core.network.NetworkConfig
 import dev.orestegabo.sequorider.model.RiderAvailability
@@ -62,13 +63,11 @@ fun AccountSettingsScreen(
         item {
             RiderCard {
                 Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Column {
-                            Text(profile.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text(profile.riderId, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        RiderStatusPill(profile.availability?.label() ?: appText(RiderText.NotAvailableYet))
-                    }
+                    Text(profile.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(profile.riderId, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    RiderStatusPill(profile.availability?.label() ?: appText(RiderText.NotAvailableYet))
                     RiderKeyValueRow(appText(RiderText.Fleet), profile.fleetClass?.name ?: appText(RiderText.NotAvailableYet))
                     RiderKeyValueRow(appText(RiderText.ServiceZone), profile.serviceZone.ifBlank { appText(RiderText.NotAvailableYet) })
                     RiderKeyValueRow(appText(RiderText.KycApproved), when (profile.kycApproved) {

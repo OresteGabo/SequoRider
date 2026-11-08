@@ -36,20 +36,20 @@ fun PayoutScreen(
     isDemo: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    val actual = summary.takeUnless { isLoading || isOffline }
+    val actual = summary.takeUnless { isLoading || isOffline || accessDenied }
     LazyColumn(modifier = modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(appText(RiderText.PayoutVisibility), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(appText(RiderText.DigitalOnly), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (isDemo) Text(appText(RiderText.PayoutLocalDemo))
-                Text(when {
-                    isLoading -> appText(RiderText.PayoutLoading)
-                    accessDenied -> appText(RiderText.PayoutAccessDenied)
-                    isOffline -> appText(RiderText.PayoutOffline)
-                    else -> actual?.message ?: appText(RiderText.NotAvailableYet)
-                }, color = if (isOffline) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(appText(RiderText.NoPayoutExecution), style = MaterialTheme.typography.bodySmall)
+                if (isLoading || accessDenied || isOffline || actual == null) {
+                    Text(when {
+                        accessDenied -> appText(RiderText.PayoutAccessDenied)
+                        isLoading -> appText(RiderText.PayoutLoading)
+                        isOffline -> appText(RiderText.PayoutOffline)
+                        else -> appText(RiderText.NotAvailableYet)
+                    }, color = if (isOffline || accessDenied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedButton(onClick = onRefresh, enabled = !isLoading) { Text(appText(RiderText.Refresh)) }
                     if (isOffline) Button(onClick = onRetry, enabled = !isLoading) { Text(appText(RiderText.Retry)) }

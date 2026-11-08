@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -99,7 +100,7 @@ private fun RiderBottomBarItem(
                     .background(if (selected) colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(section.shortLabel(), color = contentColor, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Icon(section.navigationIcon(), contentDescription = null, tint = contentColor, modifier = Modifier.size(22.dp))
             }
             Text(
                 section.label(),
@@ -121,12 +122,4 @@ fun RiderSection.label(): String = when (this) {
     RiderSection.History -> appText(RiderText.History)
     RiderSection.Payout -> appText(RiderText.Payout)
     RiderSection.Account -> appText(RiderText.Account)
-}
-
-private fun RiderSection.shortLabel(): String = when (this) {
-    RiderSection.Missions -> "M"
-    RiderSection.ActiveRoute -> "R"
-    RiderSection.History -> "H"
-    RiderSection.Payout -> "P"
-    RiderSection.Account -> "A"
 }

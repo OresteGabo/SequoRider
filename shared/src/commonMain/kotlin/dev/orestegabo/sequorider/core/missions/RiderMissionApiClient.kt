@@ -213,7 +213,7 @@ private data class DeliveryMissionDto(
             expectedPayoutCfa = courierFeeCfa,
             customerDeliveryFeeCfa = customerDeliveryFeeCfa,
             shortfallCfa = shortfallCfa,
-            slaLabel = deliveryOption?.let { "${it.etaMinMinutes}–${it.etaMaxMinutes} min" } ?: status.name,
+            slaLabel = deliveryOption?.let { "${it.etaMinMinutes}–${it.etaMaxMinutes} min" }.orEmpty(),
             deliveryOptionId = deliveryOption?.id,
             assignmentWorkforceType = assignmentWorkforceType,
             customerDeliveryNote = homeDestination?.let {

@@ -42,6 +42,7 @@ class RiderMissionClientTest {
             val records = client.listMissions()
             val active = records.first()
             assertEquals(2, active.packageCount)
+            assertEquals("", active.slaLabel, "A status is not an ETA when no configured timing exists")
             assertEquals("Fixture merchant", active.pickupName)
             assertTrue(active.customerDeliveryNote.orEmpty().contains("Fixture destination"))
             assertTrue(records.any { it.status == MissionStatus.DELIVERED_TO_CUSTOMER })

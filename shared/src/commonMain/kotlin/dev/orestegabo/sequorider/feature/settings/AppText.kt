@@ -75,7 +75,6 @@ enum class RiderText {
     AuthProfileFailed,
     AuthRestoreFailed,
     AuthRiderRequired,
-    TemporaryDevContext,
     MissionFilterAvailable,
     MissionFilterAssigned,
     MissionFilterActive,
@@ -89,6 +88,9 @@ enum class RiderText {
     AcceptMission,
     ActionUnavailable,
     MissionType,
+    ModeStandard,
+    ModeScheduled,
+    ModeCustomerPickup,
     ModeExpress,
     ModeClassic,
     ModeDeferred,
@@ -279,7 +281,7 @@ private val englishText = mapOf(
     RiderText.UnverifiedTransfers to "Unverified transfer entries",
     RiderText.ReviewRequiredAmount to "Recorded amount requiring review",
     RiderText.TransferVerificationUnavailable to "Transfer confirmation is unavailable.",
-    RiderText.TransferNotIntegrated to "Provider transfers are not integrated. Recorded payout entries do not confirm money received.",
+    RiderText.TransferNotIntegrated to "Transfers are unavailable. Recorded earnings do not confirm money received.",
     RiderText.PayoutAccessDenied to "Session expired or access denied. Sign out and sign in again.",
     RiderText.RecordedAmount to "Recorded amount",
     RiderText.RecordedPayImpact to "Effect on recorded pay",
@@ -323,7 +325,7 @@ private val englishText = mapOf(
     RiderText.Delivered to "Delivered",
     RiderText.Failed to "Failed",
     RiderText.Returned to "Returned",
-    RiderText.PayoutVisibility to "Payout visibility",
+    RiderText.PayoutVisibility to "Earnings",
     RiderText.AvailableBalance to "Available balance",
     RiderText.PendingReview to "Pending review",
     RiderText.OnHold to "On hold",
@@ -344,7 +346,7 @@ private val englishText = mapOf(
     RiderText.BuildEnvironment to "Environment",
     RiderText.ApiServer to "Server",
     RiderText.AuthTitle to "Sign in as a rider",
-    RiderText.AuthDetail to "Use Google with a courier account. Local demo remains available until production credentials are configured.",
+    RiderText.AuthDetail to "Sign in to see your assigned deliveries. The demo lets you explore sample screens without changing real orders.",
     RiderText.ContinueWithGoogle to "Continue with Google",
     RiderText.ContinueLocalDemo to "Continue in local demo",
     RiderText.SignOut to "Sign out",
@@ -358,7 +360,6 @@ private val englishText = mapOf(
     RiderText.AuthProfileFailed to "We could not load your rider profile.",
     RiderText.AuthRestoreFailed to "Your saved session could not be restored.",
     RiderText.AuthRiderRequired to "This account is not enabled for courier access yet.",
-    RiderText.TemporaryDevContext to "Temporary dev context: rider role discovery is enforced when /api/auth/me exposes courier roles.",
     RiderText.MissionFilterAvailable to "Available",
     RiderText.MissionFilterAssigned to "Assigned",
     RiderText.MissionFilterActive to "Active",
@@ -371,6 +372,9 @@ private val englishText = mapOf(
     RiderText.OfflineMissions to "Mission data is offline. Showing local data when available.",
     RiderText.AcceptMission to "Accept mission",
     RiderText.ActionUnavailable to "Not available yet",
+    RiderText.ModeStandard to "Standard",
+    RiderText.ModeScheduled to "Scheduled",
+    RiderText.ModeCustomerPickup to "Customer pickup",
     RiderText.ModeExpress to "Express",
     RiderText.ModeClassic to "Classic",
     RiderText.ModeDeferred to "Deferred",
@@ -529,7 +533,7 @@ private val frenchText = mapOf(
     RiderText.UnverifiedTransfers to "Écritures de versement non vérifiées",
     RiderText.ReviewRequiredAmount to "Montant enregistré à examiner",
     RiderText.TransferVerificationUnavailable to "La confirmation des versements est indisponible.",
-    RiderText.TransferNotIntegrated to "Les versements du prestataire ne sont pas intégrés. Une écriture de paiement ne confirme pas la réception d’argent.",
+    RiderText.TransferNotIntegrated to "Les versements sont indisponibles. Les gains enregistrés ne confirment pas la réception d’argent.",
     RiderText.PayoutAccessDenied to "Session expirée ou accès refusé. Déconnectez-vous puis reconnectez-vous.",
     RiderText.RecordedAmount to "Montant enregistré",
     RiderText.RecordedPayImpact to "Effet sur la rémunération enregistrée",
@@ -573,7 +577,7 @@ private val frenchText = mapOf(
     RiderText.Delivered to "Livrees",
     RiderText.Failed to "Echouees",
     RiderText.Returned to "Retournees",
-    RiderText.PayoutVisibility to "Visibilite paiement",
+    RiderText.PayoutVisibility to "Gains",
     RiderText.AvailableBalance to "Solde disponible",
     RiderText.PendingReview to "En verification",
     RiderText.OnHold to "Bloque",
@@ -594,7 +598,7 @@ private val frenchText = mapOf(
     RiderText.BuildEnvironment to "Environnement",
     RiderText.ApiServer to "Serveur",
     RiderText.AuthTitle to "Connexion coursier",
-    RiderText.AuthDetail to "Utilisez Google avec un compte coursier. La demo locale reste disponible jusqu'a la configuration production.",
+    RiderText.AuthDetail to "Connectez-vous pour voir vos livraisons. La démo présente des exemples sans modifier les commandes réelles.",
     RiderText.ContinueWithGoogle to "Continuer avec Google",
     RiderText.ContinueLocalDemo to "Continuer en demo locale",
     RiderText.SignOut to "Se deconnecter",
@@ -608,7 +612,6 @@ private val frenchText = mapOf(
     RiderText.AuthProfileFailed to "Impossible de charger votre profil coursier.",
     RiderText.AuthRestoreFailed to "Impossible de restaurer votre session.",
     RiderText.AuthRiderRequired to "Ce compte n'a pas encore l'acces coursier.",
-    RiderText.TemporaryDevContext to "Contexte dev temporaire: le role coursier est verifie quand /api/auth/me expose les roles.",
     RiderText.MissionFilterAvailable to "Disponibles",
     RiderText.MissionFilterAssigned to "Assignees",
     RiderText.MissionFilterActive to "Actives",
@@ -621,6 +624,9 @@ private val frenchText = mapOf(
     RiderText.OfflineMissions to "Donnees missions hors ligne. Donnees locales affichees si disponibles.",
     RiderText.AcceptMission to "Accepter la mission",
     RiderText.ActionUnavailable to "Pas encore disponible",
+    RiderText.ModeStandard to "Standard",
+    RiderText.ModeScheduled to "Programmée",
+    RiderText.ModeCustomerPickup to "Retrait client",
     RiderText.ModeExpress to "Express",
     RiderText.ModeClassic to "Classique",
     RiderText.ModeDeferred to "Différée",
@@ -769,13 +775,51 @@ private val frenchText = mapOf(
     RiderText.AdminLoginExpires to "Expire",
 )
 
+fun missionModeText(mode: String?, legacy: String, language: AppLanguage): String = appText(
+    when (mode?.uppercase() ?: legacy.uppercase()) {
+        "EXPRESS" -> RiderText.ModeExpress
+        "CLASSIC" -> RiderText.ModeClassic
+        "DEFERRED" -> RiderText.ModeDeferred
+        "STANDARD" -> RiderText.ModeStandard
+        "PROGRAMMED" -> RiderText.ModeScheduled
+        "CLICK_COLLECT" -> RiderText.ModeCustomerPickup
+        "RELAY" -> RiderText.RelayPoint
+        else -> RiderText.NotAvailableYet
+    }, language)
+
 @Composable
-fun missionModeText(mode: String?, legacy: String): String = when (mode) {
-    "EXPRESS" -> appText(RiderText.ModeExpress)
-    "CLASSIC" -> appText(RiderText.ModeClassic)
-    "DEFERRED" -> appText(RiderText.ModeDeferred)
-    else -> legacy
+fun missionModeText(mode: String?, legacy: String): String = missionModeText(mode, legacy, LocalAppLanguage.current)
+
+fun missionPlaceText(value: String, language: AppLanguage): String = when (value.trim()) {
+    "CUSTOMER_ADDRESS" -> appText(RiderText.HomeDelivery, language)
+    "RELAY_POINT" -> appText(RiderText.RelayPoint, language)
+    "SEQUO_CONSOLIDATION" -> appText(RiderText.PickupSourceSequo, language)
+    "STANDARD", "EXPRESS", "PROGRAMMED", "CLICK_COLLECT", "RELAY" -> missionModeText(null, value.trim(), language)
+    else -> value.trim()
 }
+
+@Composable
+fun missionPlaceText(value: String): String = missionPlaceText(value, LocalAppLanguage.current)
+
+fun missionRouteText(origin: String, destination: String, language: AppLanguage): String =
+    listOf(origin, destination).filter { it.isNotBlank() }.joinToString(" → ") { missionPlaceText(it, language) }
+
+@Composable
+fun missionRouteText(origin: String, destination: String): String = missionRouteText(origin, destination, LocalAppLanguage.current)
+
+/** A lifecycle status is never a time estimate, including cached pre-fix models. */
+fun missionEtaText(etaMinutes: Int, slaLabel: String, language: AppLanguage): String {
+    val timing = slaLabel.trim().takeUnless { value -> MissionStatus.entries.any { it.name == value } }.orEmpty()
+    return when {
+        etaMinutes > 0 && timing.isNotBlank() -> "$etaMinutes min / $timing"
+        etaMinutes > 0 -> "$etaMinutes min"
+        timing.isNotBlank() -> timing
+        else -> appText(RiderText.NotAvailableYet, language)
+    }
+}
+
+@Composable
+fun missionEtaText(etaMinutes: Int, slaLabel: String): String = missionEtaText(etaMinutes, slaLabel, LocalAppLanguage.current)
 
 @Composable
 fun missionWorkforceText(workforce: String): String = appText(

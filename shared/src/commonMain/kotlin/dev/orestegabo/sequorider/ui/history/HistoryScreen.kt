@@ -29,7 +29,9 @@ import dev.orestegabo.sequorider.model.formatCfa
 import dev.orestegabo.sequorider.ui.components.RiderCard
 import dev.orestegabo.sequorider.ui.components.RiderKeyValueRow
 import dev.orestegabo.sequorider.ui.components.RiderMetric
-import dev.orestegabo.sequorider.ui.components.RiderStatusPill
+import dev.orestegabo.sequorider.ui.components.RiderMissionHeader
+import dev.orestegabo.sequorider.feature.settings.missionRouteText
+import dev.orestegabo.sequorider.feature.settings.missionPlaceText
 
 @Composable
 fun HistoryScreen(
@@ -118,15 +120,13 @@ fun HistoryScreen(
 private fun HistoryMissionCard(mission: RiderMission) {
     RiderCard {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(mission.code, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                    Text("${mission.pickupArea} -> ${mission.dropoffArea}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                RiderStatusPill(missionStatusText(mission.status))
-            }
+            RiderMissionHeader(
+                reference = mission.code,
+                route = missionRouteText(mission.pickupArea, mission.dropoffArea),
+                status = missionStatusText(mission.status),
+            )
             RiderKeyValueRow(appText(RiderText.PickupStops), mission.pickupStops.joinToString { it.title })
-            RiderKeyValueRow(appText(RiderText.DropoffStop), mission.dropoffStop.title)
+            RiderKeyValueRow(appText(RiderText.DropoffStop), missionPlaceText(mission.dropoffStop.title))
             RiderKeyValueRow(appText(RiderText.CompletionTime), mission.completionTime())
             RiderKeyValueRow(appText(RiderText.IssueStatus), mission.problemMetadata?.takeIf { it.isNotBlank() } ?: mission.status.issueLabel())
             RiderKeyValueRow(appText(RiderText.PayoutPreview), mission.expectedPayoutCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))

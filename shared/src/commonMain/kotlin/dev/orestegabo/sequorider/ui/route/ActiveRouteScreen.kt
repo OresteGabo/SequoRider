@@ -39,7 +39,9 @@ import dev.orestegabo.sequorider.model.formatCfa
 import dev.orestegabo.sequorider.ui.components.RiderCard
 import dev.orestegabo.sequorider.ui.components.RiderKeyValueRow
 import dev.orestegabo.sequorider.ui.components.RiderMetric
-import dev.orestegabo.sequorider.ui.components.RiderStatusPill
+import dev.orestegabo.sequorider.ui.components.RiderMissionHeader
+import dev.orestegabo.sequorider.feature.settings.missionEtaText
+import dev.orestegabo.sequorider.feature.settings.missionPlaceText
 
 @Composable
 fun ActiveRouteScreen(
@@ -115,10 +117,7 @@ fun ActiveRouteScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(appText(RiderText.MissionDetail), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(mission.code, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                    RiderStatusPill(missionStatusText(mission.status))
-                }
+                RiderMissionHeader(reference = mission.code, status = missionStatusText(mission.status))
                 if (actionFailed) {
                     Text(appText(RiderText.MissionActionFailed), color = MaterialTheme.colorScheme.error)
                 }
@@ -136,7 +135,7 @@ fun ActiveRouteScreen(
                     Text(appText(RiderText.RouteSummary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         RiderMetric(appText(RiderText.PackageCount), mission.packageCount.toString(), Modifier.weight(1f))
-                        RiderMetric(appText(RiderText.EtaSla), mission.etaLabel(), Modifier.weight(1f))
+                        RiderMetric(appText(RiderText.EtaSla), missionEtaText(mission.etaMinutes, mission.slaLabel), Modifier.weight(1f))
                     }
                     RiderKeyValueRow(appText(RiderText.MissionCode), mission.code)
                     RiderKeyValueRow(appText(RiderText.MissionId), mission.id)
@@ -189,7 +188,7 @@ fun ActiveRouteScreen(
             item {
                 RiderCard {
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(mission.dropoffStop.title, style = MaterialTheme.typography.titleMedium)
+                        Text(missionPlaceText(mission.dropoffStop.title), style = MaterialTheme.typography.titleMedium)
                         Text(appText(if (mission.status == MissionStatus.HANDED_TO_SEQUO) RiderText.ConsolidationReceived else RiderText.ConsolidationReceiptPending))
                     }
                 }
@@ -277,7 +276,7 @@ fun ActiveRouteScreen(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
-                    RiderKeyValueRow(mission.dropoffStop.title, if (mission.dropoffStop.completed) appText(RiderText.Completed) else appText(RiderText.Pending))
+                    RiderKeyValueRow(missionPlaceText(mission.dropoffStop.title), if (mission.dropoffStop.completed) appText(RiderText.Completed) else appText(RiderText.Pending))
                     Text(mission.dropoffStop.area, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     mission.customerDeliveryNote?.takeIf { it.isNotBlank() }?.let { note ->
                         RiderKeyValueRow(appText(RiderText.CustomerDeliveryNote), note)
@@ -306,9 +305,9 @@ fun ActiveRouteScreen(
                     Text(appText(RiderText.RouteSteps), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     mission.displayRouteStops().forEach { stop ->
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        RiderKeyValueRow("${stop.sequence}. ${stop.title}", if (stop.completed) appText(RiderText.Completed) else appText(RiderText.Pending))
+                        RiderKeyValueRow("${stop.sequence}. ${missionPlaceText(stop.title)}", if (stop.completed) appText(RiderText.Completed) else appText(RiderText.Pending))
                         Text(stop.area, style = MaterialTheme.typography.bodyMedium)
-                        Text(stop.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(missionPlaceText(stop.detail), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -419,7 +418,7 @@ private fun RelayDepositPanel(
     RiderCard {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(appText(RiderText.RelayDeposit), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            RiderKeyValueRow(appText(RiderText.RelayPoint), mission.dropoffStop.title)
+            RiderKeyValueRow(appText(RiderText.RelayPoint), missionPlaceText(mission.dropoffStop.title))
             OutlinedTextField(
                 value = packageCode,
                 onValueChange = onPackageCodeChange,
@@ -540,15 +539,6 @@ private fun RiderMission.displayRouteStops(): List<RouteStop> =
             detail = destinationType.name,
             completed = dropoffStop.completed,
         )
-    }
-
-@Composable
-private fun RiderMission.etaLabel(): String =
-    when {
-        etaMinutes > 0 && slaLabel.isNotBlank() -> "${etaMinutes} min / $slaLabel"
-        etaMinutes > 0 -> "${etaMinutes} min"
-        slaLabel.isNotBlank() -> slaLabel
-        else -> appText(RiderText.NotAvailableYet)
     }
 
 private val problemReportableStatuses = setOf(
