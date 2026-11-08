@@ -8,7 +8,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -46,16 +50,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            App(
-                onGoogleSignIn = ::signInWithGoogle,
-                onGoogleSignOut = {
-                    runCatching {
-                        credentialManager.clearCredentialState(ClearCredentialStateRequest())
-                    }.onFailure { error ->
-                        Log.w(GoogleSignInTag, "Could not clear Google credential state.", error)
-                    }
-                },
-            )
+            // Consume Android system insets once, including before the shared Scaffold is shown.
+            Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+                App(
+                    onGoogleSignIn = ::signInWithGoogle,
+                    onGoogleSignOut = {
+                        runCatching {
+                            credentialManager.clearCredentialState(ClearCredentialStateRequest())
+                        }.onFailure { error ->
+                            Log.w(GoogleSignInTag, "Could not clear Google credential state.", error)
+                        }
+                    },
+                )
+            }
         }
     }
 
