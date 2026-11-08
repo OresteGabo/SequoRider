@@ -64,6 +64,8 @@ import dev.orestegabo.sequorider.ui.chrome.RiderBottomBar
 import dev.orestegabo.sequorider.ui.chrome.label
 import dev.orestegabo.sequorider.ui.history.HistoryScreen
 import dev.orestegabo.sequorider.ui.missions.MissionsScreen
+import dev.orestegabo.sequorider.ui.navigation.RiderBackHandler
+import dev.orestegabo.sequorider.ui.navigation.riderBackDestination
 import dev.orestegabo.sequorider.ui.payout.PayoutScreen
 import dev.orestegabo.sequorider.ui.route.ActiveRouteScreen
 import kotlinx.coroutines.launch
@@ -352,6 +354,11 @@ fun SequoRiderShell(
                 )
             }
             return@CompositionLocalProvider
+        }
+
+        val backDestination = riderBackDestination(currentSection)
+        RiderBackHandler(enabled = backDestination != null) {
+            backDestination?.let { currentSection = it }
         }
 
         Scaffold(
