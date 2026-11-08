@@ -118,7 +118,7 @@ fun ActiveRouteScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(appText(RiderText.MissionDetail), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                RiderMissionHeader(reference = mission.code, status = missionStatusText(mission.status))
+                RiderMissionHeader(reference = mission.displayReference, status = missionStatusText(mission.status))
                 if (actionFailed) {
                     Text(appText(RiderText.MissionActionFailed), color = MaterialTheme.colorScheme.error)
                 }
@@ -230,9 +230,9 @@ fun ActiveRouteScreen(
                         RiderMetric(appText(RiderText.PackageCount), mission.packageCount.toString(), Modifier.weight(1f))
                         RiderMetric(appText(RiderText.EtaSla), missionEtaText(mission.etaMinutes, mission.slaLabel), Modifier.weight(1f))
                     }
-                    RiderKeyValueRow(appText(RiderText.MissionCode), mission.code)
-                    RiderKeyValueRow(appText(RiderText.MissionId), mission.id)
-                    RiderKeyValueRow(appText(RiderText.OrderId), mission.orderId)
+                    RiderKeyValueRow(appText(RiderText.MissionCode), mission.displayReference)
+                    RiderKeyValueRow(appText(RiderText.MissionId), mission.publicReference?.takeIf(String::isNotBlank) ?: mission.id)
+                    RiderKeyValueRow(appText(RiderText.OrderId), mission.displayOrderReference)
                     RiderKeyValueRow(appText(RiderText.MissionType), missionModeText(mission.deliveryOptionId, mission.serviceType.name))
                     mission.assignmentWorkforceType?.let { RiderKeyValueRow(appText(RiderText.Workforce), missionWorkforceText(it)) }
                     RiderKeyValueRow(appText(RiderText.Distance), mission.distanceKm.ifBlank { appText(RiderText.NotAvailableYet) })

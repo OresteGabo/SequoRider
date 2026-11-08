@@ -99,7 +99,7 @@ fun PayoutScreen(
                     item(key = record.id) {
                         RiderCard {
                             Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                RiderKeyValueRow(appText(RiderText.SourceReference), record.missionId)
+                                RiderKeyValueRow(appText(RiderText.SourceReference), record.missionReference?.takeIf(String::isNotBlank) ?: record.missionId)
                                 RiderKeyValueRow(appText(RiderText.RecordedAmount), record.amountCfa.formatCfa())
                                 RiderKeyValueRow(appText(RiderText.RecordedPayImpact), record.recordedPayImpactCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
                                 Text(appText(RiderText.Status) + ": " + appText(when (record.status) {

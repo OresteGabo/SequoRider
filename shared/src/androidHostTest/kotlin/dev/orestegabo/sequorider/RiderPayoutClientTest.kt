@@ -25,7 +25,7 @@ class RiderPayoutClientTest {
     @Test
     fun readsAuthoritativeRecordedPayAndHistoricalWorkforceWithoutTransferAliases() = runBlocking<Unit> {
         val history = """
-            [{"id":"earning","missionId":"mission-1","amountCfa":500,"payableAmountCfa":500,
+            [{"id":"earning","publicReference":"F00-000-09J","missionReference":"DZ9-X8W-7P3","missionId":"mission-1","amountCfa":500,"payableAmountCfa":500,
               "status":"AVAILABLE","payableToRider":true,"description":"Recorded earning",
               "createdAt":"2026-11-08T10:00:00Z","workforceType":"Freelancer","account":"RiderPayable","direction":"Credit"},
              {"id":"hold","missionId":"mission-1","amountCfa":100,"payableAmountCfa":100,
@@ -56,6 +56,9 @@ class RiderPayoutClientTest {
             assertEquals(0, current.processingCfa)
             assertNull(current.lastPayoutCfa)
             val records = repository.history()
+            assertEquals("DZ9-X8W-7P3", records.first().missionReference)
+            assertEquals("mission-1", records.first().missionId)
+            assertNull(records[1].missionReference, "Older ledger rows remain supported.")
             assertEquals(listOf(500, 100, 50, 0, 0), records.map { it.payableAmountCfa })
             assertEquals(listOf(500, -100, -50, 0, 0), records.map { it.recordedPayImpactCfa })
             assertEquals(PayoutEntryStatus.REVIEW_REQUIRED, records[3].status)

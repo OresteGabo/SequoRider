@@ -122,7 +122,7 @@ private fun HistoryMissionCard(mission: RiderMission) {
     RiderCard {
         Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             RiderMissionHeader(
-                reference = mission.code,
+                reference = mission.displayReference,
                 route = missionRouteText(mission.pickupArea, mission.dropoffArea),
                 status = missionStatusText(mission.status),
             )

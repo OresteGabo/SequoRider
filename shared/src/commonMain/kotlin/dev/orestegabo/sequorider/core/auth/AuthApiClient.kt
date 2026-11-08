@@ -203,6 +203,7 @@ data class CurrentUser(
     val status: String,
     val active: Boolean = true,
     val roles: Set<String> = emptySet(),
+    val publicReference: String? = null,
 ) {
     val displayName: String
         get() = backendDisplayName?.takeIf { it.isNotBlank() }

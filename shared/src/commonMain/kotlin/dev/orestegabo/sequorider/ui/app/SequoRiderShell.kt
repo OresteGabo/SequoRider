@@ -104,6 +104,7 @@ fun SequoRiderShell(
     var useLocalDemo by remember { mutableStateOf(false) }
     val profile = if (useLocalDemo) DemoRiderData.profile else dev.orestegabo.sequorider.model.RiderProfile(
         riderId = signedInUser?.id.orEmpty(),
+        publicReference = signedInUser?.publicReference,
         displayName = signedInUser?.displayName.orEmpty(),
         fleetClass = null, availability = null, serviceZone = "", payoutProvider = null, kycApproved = null,
     )

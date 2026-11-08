@@ -16,7 +16,7 @@ import kotlinx.serialization.json.Json
 
 class RiderMissionClientTest {
     private val mission = """
-        {"id":"mission-1","deliveryCode":"delivery-1","orderId":"order-1","courierId":"courier-1",
+        {"id":"mission-1","publicReference":"DZ9-X8W-7P3","orderReference":"C12-345-6E6","merchantSubOrderReference":"MAB-CDE-FJZ","deliveryCode":"delivery-1","orderId":"order-1","courierId":"courier-1",
          "merchantSubOrderId":"sub-1","deliveryMode":"STANDARD","status":"ACCEPTED_BY_COURIER",
          "destinationType":"CUSTOMER_ADDRESS","packageCount":2,"pickupName":"Fixture merchant",
          "dropoffArea":"Tokoin, Lomé","homeDestination":{"recipientName":"Fixture customer",
@@ -42,6 +42,10 @@ class RiderMissionClientTest {
             val records = client.listMissions()
             val active = records.first()
             assertEquals(2, active.packageCount)
+            assertEquals("DZ9-X8W-7P3", active.displayReference)
+            assertEquals("C12-345-6E6", active.displayOrderReference)
+            assertEquals("mission-1", active.id)
+            assertEquals("delivery-1", active.code)
             assertEquals("", active.slaLabel, "A status is not an ETA when no configured timing exists")
             assertEquals("Fixture merchant", active.pickupName)
             assertTrue(active.customerDeliveryNote.orEmpty().contains("Fixture destination"))

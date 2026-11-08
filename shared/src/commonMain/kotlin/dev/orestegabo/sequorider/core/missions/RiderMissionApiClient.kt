@@ -170,11 +170,14 @@ private data class DeliveryMissionDto(
     val relayDestination: RelayDestinationDto? = null,
     val deliveryOption: DeliveryModeDto? = null,
     val assignmentWorkforceType: String? = null,
+    val publicReference: String? = null,
+    val orderReference: String? = null,
+    val merchantSubOrderReference: String? = null,
 ) {
     fun toModel(): RiderMission {
         val pickup = PickupStop(
             id = merchantSubOrderId ?: id,
-            title = pickupName ?: merchantSubOrderId ?: deliveryCode,
+            title = pickupName ?: merchantSubOrderReference?.takeIf(String::isNotBlank) ?: merchantSubOrderId ?: publicReference?.takeIf(String::isNotBlank) ?: deliveryCode,
             area = "",
             merchantSubOrderId = merchantSubOrderId,
             completed = pickupAt != null,
@@ -190,6 +193,9 @@ private data class DeliveryMissionDto(
             id = id,
             code = deliveryCode,
             orderId = orderId,
+            publicReference = publicReference,
+            orderReference = orderReference,
+            merchantSubOrderReference = merchantSubOrderReference,
             merchantSubOrderId = merchantSubOrderId,
             courierId = courierId,
             serviceType = deliveryMode,

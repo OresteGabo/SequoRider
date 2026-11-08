@@ -66,7 +66,7 @@ fun AccountSettingsScreen(
                 Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(profile.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
                         maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Text(profile.riderId, style = MaterialTheme.typography.bodySmall,
+                    Text(profile.publicReference?.takeIf(String::isNotBlank) ?: profile.riderId, style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     RiderStatusPill(profile.availability?.label() ?: appText(RiderText.NotAvailableYet))
                     RiderKeyValueRow(appText(RiderText.Fleet), profile.fleetClass?.name ?: appText(RiderText.NotAvailableYet))

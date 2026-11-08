@@ -109,11 +109,15 @@ private data class RiderPayoutHistoryItemDto(
     val workforceType: String? = null,
     val account: String? = null,
     val direction: String? = null,
+    val publicReference: String? = null,
+    val missionReference: String? = null,
 ) {
     fun toModel(): PayoutHistoryItem =
         PayoutHistoryItem(
             id = id,
             missionId = missionId,
+            publicReference = publicReference,
+            missionReference = missionReference,
             amountCfa = amountCfa,
             payableAmountCfa = payableAmountCfa,
             status = status,

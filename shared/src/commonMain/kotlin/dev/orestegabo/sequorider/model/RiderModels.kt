@@ -90,6 +90,7 @@ data class RiderProfile(
     val serviceZone: String,
     val payoutProvider: String?,
     val kycApproved: Boolean?,
+    val publicReference: String? = null,
 )
 
 data class RiderMission(
@@ -128,7 +129,13 @@ data class RiderMission(
     val deliveryOptionId: String? = null,
     val pickupSource: String? = null,
     val assignmentWorkforceType: String? = null,
-)
+    val publicReference: String? = null,
+    val orderReference: String? = null,
+    val merchantSubOrderReference: String? = null,
+) {
+    val displayReference: String get() = publicReference?.takeIf(String::isNotBlank) ?: code
+    val displayOrderReference: String get() = orderReference?.takeIf(String::isNotBlank) ?: orderId
+}
 
 data class PickupStop(
     val id: String,
@@ -206,6 +213,8 @@ data class PayoutHistoryItem(
     val workforceType: String? = null,
     val account: String? = null,
     val direction: String? = null,
+    val publicReference: String? = null,
+    val missionReference: String? = null,
 ) {
     // Amounts are magnitudes in the ledger; the server direction determines the display sign.
     val recordedPayImpactCfa: Int?
