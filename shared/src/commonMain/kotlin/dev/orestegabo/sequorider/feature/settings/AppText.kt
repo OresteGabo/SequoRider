@@ -1,5 +1,6 @@
 package dev.orestegabo.sequorider.feature.settings
 
+import dev.orestegabo.sequorider.model.MissionStatus
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 
@@ -780,19 +781,19 @@ fun missionModeText(mode: String?, legacy: String): String = when (mode) {
 fun missionWorkforceText(workforce: String): String = appText(
     if (workforce == "SequoSalaried") RiderText.WorkforceSequo else RiderText.WorkforceIndependent)
 
-fun missionStatusText(status: dev.orestegabo.sequorider.model.MissionStatus, language: AppLanguage): String = appText(
+fun missionStatusText(status: MissionStatus, language: AppLanguage): String = appText(
     when (status) {
-        dev.orestegabo.sequorider.model.MissionStatus.CREATED -> RiderText.StatusCreated
-        dev.orestegabo.sequorider.model.MissionStatus.OFFERED_TO_COURIER -> RiderText.StatusOffered
-        dev.orestegabo.sequorider.model.MissionStatus.ACCEPTED_BY_COURIER -> RiderText.StatusAccepted
-        dev.orestegabo.sequorider.model.MissionStatus.PICKED_UP_FROM_SELLER -> RiderText.StatusPickedUp
-        dev.orestegabo.sequorider.model.MissionStatus.DEPOSITED_AT_RELAY -> RiderText.StatusAtRelay
-        dev.orestegabo.sequorider.model.MissionStatus.HANDED_TO_SEQUO -> RiderText.ConsolidationReceived
-        dev.orestegabo.sequorider.model.MissionStatus.DELIVERED_TO_CUSTOMER -> RiderText.Delivered
-        dev.orestegabo.sequorider.model.MissionStatus.RELEASED_BY_RELAY -> RiderText.StatusReleased
-        dev.orestegabo.sequorider.model.MissionStatus.PROBLEM_REPORTED -> RiderText.StatusProblem
-        dev.orestegabo.sequorider.model.MissionStatus.CANCELLED -> RiderText.StatusCancelled
+        MissionStatus.CREATED -> RiderText.StatusCreated
+        MissionStatus.OFFERED_TO_COURIER -> RiderText.StatusOffered
+        MissionStatus.ACCEPTED_BY_COURIER -> RiderText.StatusAccepted
+        MissionStatus.PICKED_UP_FROM_SELLER -> RiderText.StatusPickedUp
+        MissionStatus.DEPOSITED_AT_RELAY -> RiderText.StatusAtRelay
+        MissionStatus.HANDED_TO_SEQUO -> RiderText.ConsolidationReceived
+        MissionStatus.DELIVERED_TO_CUSTOMER -> RiderText.Delivered
+        MissionStatus.RELEASED_BY_RELAY -> RiderText.StatusReleased
+        MissionStatus.PROBLEM_REPORTED -> RiderText.StatusProblem
+        MissionStatus.CANCELLED -> RiderText.StatusCancelled
     }, language)
 
 @Composable
-fun missionStatusText(status: dev.orestegabo.sequorider.model.MissionStatus): String = missionStatusText(status, LocalAppLanguage.current)
+fun missionStatusText(status: MissionStatus): String = missionStatusText(status, LocalAppLanguage.current)

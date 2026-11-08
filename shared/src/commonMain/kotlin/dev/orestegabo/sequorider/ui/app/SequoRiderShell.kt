@@ -72,6 +72,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import dev.orestegabo.sequorider.core.network.riderWorkspaceScope
 import dev.orestegabo.sequorider.core.network.riderRequest
+import dev.orestegabo.sequorider.core.network.riderAccessDenied
 import dev.orestegabo.sequorider.core.auth.DevelopmentRiderAccess
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
@@ -143,6 +144,7 @@ fun SequoRiderShell(
     }
     var missions by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(if (useLocalDemo) DemoRiderData.missions else emptyList<RiderMission>()) }
     var missionsLoading by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
+    var missionsAccessDenied by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
     var missionsOffline by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
     var missionActionInProgressId by remember(signedInUser?.id, useLocalDemo) { mutableStateOf<String?>(null) }
     var missionActionFailed by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
@@ -157,6 +159,7 @@ fun SequoRiderShell(
     var notificationPreference by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(RiderNotificationPreference()) }
     var notificationRefreshJob by remember(notificationsRepository) { mutableStateOf<Job?>(null) }
     var notificationsLoading by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
+    var notificationsAccessDenied by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
     var notificationsOffline by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
     var notificationActionFailed by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
     var notificationPreferenceSaved by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
@@ -180,6 +183,18 @@ fun SequoRiderShell(
         riderRequest { authRepository.developmentAccess() }.onSuccess { fixtureAccess = it }
     }
 
+    fun missionReadFailed(error: Throwable) {
+        missionsOffline = true
+        missionsAccessDenied = riderAccessDenied(error)
+        if (missionsAccessDenied) missions = emptyList()
+    }
+
+    fun notificationReadFailed(error: Throwable) {
+        notificationsOffline = true
+        notificationsAccessDenied = riderAccessDenied(error)
+        if (notificationsAccessDenied) notifications = emptyList()
+    }
+
     fun refreshMissions(showLoading: Boolean = true) {
         if ((!useLocalDemo && signedInUser == null) || missionActionInProgressId != null) return
         workspaceScope.launch {
@@ -189,10 +204,9 @@ fun SequoRiderShell(
                 .onSuccess { latest ->
                     missions = latest
                     missionsOffline = false
+                    missionsAccessDenied = false
                 }
-                .onFailure {
-                    missionsOffline = true
-                }
+                .onFailure(::missionReadFailed)
             missionsLoading = false
         }
     }
@@ -210,14 +224,14 @@ fun SequoRiderShell(
                 .onSuccess { latest ->
                     notifications = latest
                     notificationsOffline = false
+                    notificationsAccessDenied = false
                 }
-                .onFailure {
-                    notificationsOffline = true
-                }
+                .onFailure(::notificationReadFailed)
             riderRequest { notificationsRepository.effectivePreference(RiderNotificationPreferenceEventType.RIDER_MISSION_OFFERED) }
                 .onSuccess { preference ->
                     notificationPreference = preference.copy(eventType = RiderNotificationPreferenceEventType.ALL)
                 }
+                .onFailure { if (riderAccessDenied(it)) notificationReadFailed(it) }
             notificationsLoading = false
         }
     }
@@ -230,16 +244,21 @@ fun SequoRiderShell(
         notification: RiderNotification,
         action: suspend (String) -> RiderNotification,
     ) {
+        if (notificationsAccessDenied || notificationsOffline || notificationsLoading) return
         workspaceScope.launch {
             notificationActionFailed = false
             notificationPreferenceSaved = false
             riderRequest { action(notification.id) }
                 .onSuccess { updated -> replaceNotification(updated) }
-                .onFailure { notificationActionFailed = true }
+                .onFailure {
+                    notificationActionFailed = true
+                    if (riderAccessDenied(it)) notificationReadFailed(it)
+                }
         }
     }
 
     fun saveNotificationPreference(preference: RiderNotificationPreference) {
+        if (notificationsAccessDenied || notificationsOffline || notificationsLoading) return
         workspaceScope.launch {
             notificationActionFailed = false
             notificationPreferenceSaved = false
@@ -248,7 +267,10 @@ fun SequoRiderShell(
                     notificationPreference = updated.copy(eventType = RiderNotificationPreferenceEventType.ALL)
                     notificationPreferenceSaved = true
                 }
-                .onFailure { notificationActionFailed = true }
+                .onFailure {
+                    notificationActionFailed = true
+                    if (riderAccessDenied(it)) notificationReadFailed(it)
+                }
         }
     }
 
@@ -264,11 +286,12 @@ fun SequoRiderShell(
                         selectedMissionId = updated.id
                         missionsOffline = false
                         riderRequest { missionRepository.listMissions(profile.riderId) }
-                            .onSuccess { latest -> missions = latest }
-                            .onFailure { missionsOffline = true }
+                            .onSuccess { latest -> missions = latest; missionsAccessDenied = false }
+                            .onFailure(::missionReadFailed)
                     }
                     .onFailure {
                         missionActionFailed = true
+                        if (riderAccessDenied(it)) missionReadFailed(it)
                     }
             } finally {
                 missionActionInProgressId = null
@@ -288,11 +311,12 @@ fun SequoRiderShell(
                         selectedMissionId = updated.id
                         missionsOffline = false
                         riderRequest { missionRepository.listMissions(profile.riderId) }
-                            .onSuccess { latest -> missions = latest }
-                            .onFailure { missionsOffline = true }
+                            .onSuccess { latest -> missions = latest; missionsAccessDenied = false }
+                            .onFailure(::missionReadFailed)
                     }
                     .onFailure {
                         missionActionFailed = true
+                        if (riderAccessDenied(it)) missionReadFailed(it)
                     }
             } finally {
                 missionActionInProgressId = null
@@ -308,10 +332,9 @@ fun SequoRiderShell(
             .onSuccess { latest ->
                 missions = latest
                 missionsOffline = false
+                missionsAccessDenied = false
             }
-            .onFailure {
-                missionsOffline = true
-            }
+            .onFailure(::missionReadFailed)
         missionsLoading = false
     }
 
@@ -455,6 +478,7 @@ fun SequoRiderShell(
                             localMode = useLocalDemo,
                             isLoading = missionsLoading,
                             isOffline = missionsOffline,
+                            accessDenied = missionsAccessDenied,
                             actionInProgressMissionId = missionActionInProgressId,
                             actionFailed = missionActionFailed,
                             onRefresh = { refreshMissions() },
@@ -468,13 +492,11 @@ fun SequoRiderShell(
                         )
                         RiderSection.ActiveRoute -> ActiveRouteScreen(
                             mission = missions.firstOrNull { it.id == selectedMissionId },
-                            actionInProgress = missionActionInProgressId != null || missionsOffline || missionsLoading,
+                            actionInProgress = missionActionInProgressId != null,
+                            isOffline = missionsOffline,
+                            isLoading = missionsLoading,
+                            accessDenied = missionsAccessDenied,
                             actionFailed = missionActionFailed,
-                            onStartPickup = { mission ->
-                                updateMissionAction(mission) {
-                                    missionRepository.startPickup(mission.id)
-                                }
-                            },
                             onMarkPickupDone = { mission, custodyNote ->
                                 updateMissionAction(mission) {
                                     missionRepository.markPickedUp(
@@ -482,11 +504,6 @@ fun SequoRiderShell(
                                         proofMetadata = custodyNote.takeIf { it.isNotBlank() },
                                         idempotencyKey = mission.idempotencyKey("pickup"),
                                     )
-                                }
-                            },
-                            onStartDelivery = { mission ->
-                                updateMissionAction(mission) {
-                                    missionRepository.startDelivery(mission.id)
                                 }
                             },
                             onConfirmDelivery = { mission, deliveryPin, deliveryNote ->
@@ -520,6 +537,7 @@ fun SequoRiderShell(
                             localMode = useLocalDemo,
                             isLoading = missionsLoading,
                             isOffline = missionsOffline,
+                            accessDenied = missionsAccessDenied,
                             onRefresh = { refreshMissions() },
                             onRetry = { refreshMissions() },
                             modifier = Modifier.fillMaxSize(),
@@ -543,6 +561,7 @@ fun SequoRiderShell(
                             notificationPreference = notificationPreference,
                             notificationsLoading = notificationsLoading,
                             notificationsOffline = notificationsOffline,
+                            notificationsAccessDenied = notificationsAccessDenied,
                             notificationActionFailed = notificationActionFailed,
                             notificationPreferenceSaved = notificationPreferenceSaved,
                             includeArchivedNotifications = includeArchivedNotifications,

@@ -38,6 +38,7 @@ fun MissionsScreen(
     missions: List<RiderMission>,
     isLoading: Boolean,
     isOffline: Boolean,
+    accessDenied: Boolean = false,
     actionInProgressMissionId: String?,
     actionFailed: Boolean,
     onRefresh: () -> Unit,
@@ -64,6 +65,7 @@ fun MissionsScreen(
                 }
                 Text(
                     when {
+                        accessDenied -> appText(RiderText.PayoutAccessDenied)
                         isLoading -> appText(RiderText.LoadingMissions)
                         isOffline -> appText(RiderText.OfflineMissions)
                         localMode -> appText(RiderText.NoServerActions)

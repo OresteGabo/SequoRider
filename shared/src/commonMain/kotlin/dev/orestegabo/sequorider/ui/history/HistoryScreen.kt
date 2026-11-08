@@ -36,6 +36,7 @@ fun HistoryScreen(
     missions: List<RiderMission>,
     isLoading: Boolean,
     isOffline: Boolean,
+    accessDenied: Boolean = false,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -59,6 +60,7 @@ fun HistoryScreen(
                 }
                 Text(
                     when {
+                        accessDenied -> appText(RiderText.PayoutAccessDenied)
                         isLoading -> appText(RiderText.LoadingMissions)
                         isOffline -> appText(RiderText.OfflineMissions)
                         localMode -> appText(RiderText.HistoryLocalDemo)

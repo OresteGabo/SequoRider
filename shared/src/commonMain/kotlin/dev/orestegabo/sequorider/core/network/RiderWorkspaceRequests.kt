@@ -20,3 +20,10 @@ internal suspend inline fun <T> riderRequest(block: () -> T): Result<T> = try {
 } catch (error: Exception) {
     Result.failure(error)
 }
+
+internal fun riderAccessDenied(error: Throwable): Boolean = when (error) {
+    is dev.orestegabo.sequorider.core.missions.RiderMissionApiException -> error.statusCode in setOf(401, 403)
+    is SequoApiException -> error.statusCode in setOf(401, 403)
+    is dev.orestegabo.sequorider.core.auth.AuthApiException -> error.statusCode in setOf(401, 403)
+    else -> false
+}

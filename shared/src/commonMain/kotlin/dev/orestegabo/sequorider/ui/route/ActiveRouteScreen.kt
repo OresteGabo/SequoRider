@@ -46,14 +46,23 @@ fun ActiveRouteScreen(
     mission: RiderMission?,
     actionInProgress: Boolean,
     actionFailed: Boolean,
-    onStartPickup: (RiderMission) -> Unit,
+    isOffline: Boolean = false,
+    isLoading: Boolean = false,
+    accessDenied: Boolean = false,
     onMarkPickupDone: (RiderMission, String) -> Unit,
-    onStartDelivery: (RiderMission) -> Unit,
     onConfirmDelivery: (RiderMission, String, String) -> Unit,
     onConfirmRelayDeposit: (RiderMission, String, String) -> Unit,
     onReportProblem: (RiderMission, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val nextStep = riderMissionStep(mission?.status, mission?.destinationType)
+    val actionsDisabled = actionInProgress || isLoading || isOffline || accessDenied
+    val unavailableMessage = when {
+        accessDenied -> appText(RiderText.PayoutAccessDenied)
+        isOffline -> appText(RiderText.OfflineMissions)
+        isLoading -> appText(RiderText.LoadingMissions)
+        else -> null
+    }
     var custodyNote by remember(mission?.id) { mutableStateOf("") }
     var cannotPickupDialogOpen by remember(mission?.id) { mutableStateOf(false) }
     var cannotPickupReason by remember(mission?.id) { mutableStateOf("") }
@@ -96,7 +105,7 @@ fun ActiveRouteScreen(
                 RiderCard {
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(appText(RiderText.ActiveRoute), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Text(appText(RiderText.EmptyMissions), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(unavailableMessage ?: appText(RiderText.EmptyMissions), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -113,7 +122,9 @@ fun ActiveRouteScreen(
                 if (actionFailed) {
                     Text(appText(RiderText.MissionActionFailed), color = MaterialTheme.colorScheme.error)
                 }
-                if (actionInProgress) {
+                if (unavailableMessage != null) {
+                    Text(unavailableMessage, color = MaterialTheme.colorScheme.error)
+                } else if (actionInProgress) {
                     Text(appText(RiderText.MissionActionInProgress), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -138,14 +149,14 @@ fun ActiveRouteScreen(
             }
         }
 
-        if (mission.destinationType == MissionDestinationType.CUSTOMER_ADDRESS) {
+        if (nextStep == RiderMissionStep.HomeDelivery) {
             item {
                 HomeDeliveryPanel(
                     mission = mission,
                     deliveryPin = deliveryPin,
                     deliveryProblemReason = deliveryProblemReason,
                     deliveryProblemTouched = deliveryProblemTouched,
-                    actionInProgress = actionInProgress,
+                    actionInProgress = actionsDisabled,
                     onDeliveryPinChange = { deliveryPin = sanitizeCode(it, MaxDeliveryPinLength) },
                     onDeliveryProblemReasonChange = {
                         deliveryProblemReason = sanitizePickupText(it, MaxPickupReasonLength)
@@ -160,13 +171,13 @@ fun ActiveRouteScreen(
                     },
                 )
             }
-        } else if (mission.destinationType == MissionDestinationType.RELAY_POINT) {
+        } else if (nextStep == RiderMissionStep.RelayDeposit) {
             item {
                 RelayDepositPanel(
                     mission = mission,
                     packageCode = packageCode,
                     lockerSlot = lockerSlot,
-                    actionInProgress = actionInProgress,
+                    actionInProgress = actionsDisabled,
                     onPackageCodeChange = { packageCode = sanitizePackageCode(it) },
                     onLockerSlotChange = { lockerSlot = sanitizePickupText(it, MaxLockerSlotLength) },
                     onConfirmRelayDeposit = { onConfirmRelayDeposit(mission, packageCode, lockerSlot) },
@@ -185,43 +196,45 @@ fun ActiveRouteScreen(
             }
         }
 
-        item {
-            RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(appText(RiderText.PickupFlow), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RiderMetric(appText(RiderText.PickupSource), mission.pickupSourceLabel(), Modifier.weight(1f))
-                        RiderMetric(appText(RiderText.ExpectedPackages), mission.packageCount.toString(), Modifier.weight(1f))
-                    }
-                    OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth(), enabled = false) {
-                        Text(appText(RiderText.ScanPackage))
-                    }
-                    Text(appText(RiderText.ScanPlaceholder), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    OutlinedTextField(
-                        value = custodyNote,
-                        onValueChange = { custodyNote = sanitizePickupText(it, MaxCustodyNoteLength) },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text(appText(RiderText.CustodyNote)) },
-                        placeholder = { Text(appText(RiderText.CustodyNotePlaceholder)) },
-                        supportingText = { Text(appText(RiderText.CharacterCount).formatCount(custodyNote.length, MaxCustodyNoteLength)) },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {}),
-                        maxLines = 3,
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = { onMarkPickupDone(mission, custodyNote) },
-                            enabled = !actionInProgress && mission.status == MissionStatus.ACCEPTED_BY_COURIER,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text(appText(RiderText.MarkPickupDone))
+        if (nextStep == RiderMissionStep.Pickup) {
+            item {
+                RiderCard {
+                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(appText(RiderText.PickupFlow), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            RiderMetric(appText(RiderText.PickupSource), mission.pickupSourceLabel(), Modifier.weight(1f))
+                            RiderMetric(appText(RiderText.ExpectedPackages), mission.packageCount.toString(), Modifier.weight(1f))
                         }
-                        OutlinedButton(
-                            onClick = { cannotPickupDialogOpen = true },
-                            enabled = !actionInProgress && mission.status == MissionStatus.ACCEPTED_BY_COURIER,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text(appText(RiderText.CannotPickup))
+                        OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth(), enabled = false) {
+                            Text(appText(RiderText.ScanPackage))
+                        }
+                        Text(appText(RiderText.ScanPlaceholder), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        OutlinedTextField(
+                            value = custodyNote,
+                            onValueChange = { custodyNote = sanitizePickupText(it, MaxCustodyNoteLength) },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text(appText(RiderText.CustodyNote)) },
+                            placeholder = { Text(appText(RiderText.CustodyNotePlaceholder)) },
+                            supportingText = { Text(appText(RiderText.CharacterCount).formatCount(custodyNote.length, MaxCustodyNoteLength)) },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {}),
+                            maxLines = 3,
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = { onMarkPickupDone(mission, custodyNote) },
+                                enabled = !actionsDisabled && mission.status == MissionStatus.ACCEPTED_BY_COURIER,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(appText(RiderText.MarkPickupDone))
+                            }
+                            OutlinedButton(
+                                onClick = { cannotPickupDialogOpen = true },
+                                enabled = !actionsDisabled && mission.status == MissionStatus.ACCEPTED_BY_COURIER,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(appText(RiderText.CannotPickup))
+                            }
                         }
                     }
                 }
@@ -301,62 +314,19 @@ fun ActiveRouteScreen(
             }
         }
 
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(
-                        onClick = { onStartPickup(mission) },
-                        modifier = Modifier.weight(1f),
-                        enabled = !actionInProgress && mission.status == MissionStatus.ACCEPTED_BY_COURIER,
-                    ) {
-                        Text(appText(RiderText.StartPickup))
-                    }
-                    Button(
-                        onClick = { onMarkPickupDone(mission, custodyNote) },
-                        enabled = !actionInProgress && mission.status == MissionStatus.ACCEPTED_BY_COURIER,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(appText(RiderText.MarkPickupDone))
-                    }
-                }
-                if (mission.destinationType != MissionDestinationType.SEQUO_CONSOLIDATION) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        OutlinedButton(
-                            onClick = { onStartDelivery(mission) },
-                            modifier = Modifier.weight(1f),
-                            enabled = !actionInProgress && mission.status == MissionStatus.PICKED_UP_FROM_SELLER,
-                        ) {
-                            Text(appText(RiderText.StartDelivery))
-                        }
-                        Button(
-                            onClick = {
-                                if (mission.destinationType == MissionDestinationType.RELAY_POINT) {
-                                    onConfirmRelayDeposit(mission, packageCode, lockerSlot)
-                                } else {
-                                    onConfirmDelivery(mission, deliveryPin, deliveryProblemReason)
-                                }
-                            },
-                            enabled = !actionInProgress && mission.canConfirmDropoff(deliveryPin) &&
-                                (mission.destinationType != MissionDestinationType.RELAY_POINT || lockerSlot.isNotBlank()),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text(if (mission.destinationType == MissionDestinationType.RELAY_POINT) appText(RiderText.ConfirmRelayDeposit) else appText(RiderText.ConfirmDelivery))
-                        }
-                    }
-                }
+        if (mission.status in problemReportableStatuses && nextStep != RiderMissionStep.Pickup) {
+            item {
                 OutlinedButton(
                     onClick = {
-                        if (mission.status != MissionStatus.ACCEPTED_BY_COURIER) cannotPickupReason = deliveryProblemReason
+                        cannotPickupReason = deliveryProblemReason
                         cannotPickupDialogOpen = true
                     },
-                    enabled = !actionInProgress && mission.status in problemReportableStatuses,
+                    enabled = !actionsDisabled,
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(if (mission.status == MissionStatus.ACCEPTED_BY_COURIER) appText(RiderText.ReportPickupProblem) else appText(RiderText.ReportDeliveryProblem))
-                }
-                Text(appText(RiderText.ActionRequiresEndpoint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                ) { Text(appText(RiderText.ReportDeliveryProblem)) }
             }
         }
+
     }
 }
 

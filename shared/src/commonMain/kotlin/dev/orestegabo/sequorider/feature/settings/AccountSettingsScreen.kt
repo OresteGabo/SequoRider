@@ -37,6 +37,7 @@ fun AccountSettingsScreen(
     notificationPreference: RiderNotificationPreference,
     notificationsLoading: Boolean,
     notificationsOffline: Boolean,
+    notificationsAccessDenied: Boolean = false,
     notificationActionFailed: Boolean,
     notificationPreferenceSaved: Boolean,
     includeArchivedNotifications: Boolean,
@@ -115,6 +116,7 @@ fun AccountSettingsScreen(
             NotificationPreferencesCard(
                 preference = notificationPreference,
                 preferenceSaved = notificationPreferenceSaved,
+                enabled = !notificationsLoading && !notificationsOffline && !notificationsAccessDenied,
                 onPreferenceChange = onNotificationPreferenceChange,
             )
         }
@@ -150,7 +152,9 @@ fun AccountSettingsScreen(
                     if (notificationsLoading) {
                         Text(appText(RiderText.NotificationLoading), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    if (notificationsOffline) {
+                    if (notificationsAccessDenied) {
+                        Text(appText(RiderText.PayoutAccessDenied), color = MaterialTheme.colorScheme.error)
+                    } else if (notificationsOffline) {
                         Text(appText(RiderText.NotificationOffline), color = MaterialTheme.colorScheme.error)
                     }
                     if (notificationActionFailed) {
@@ -162,6 +166,7 @@ fun AccountSettingsScreen(
                         visibleNotifications.forEach { notification ->
                             NotificationRow(
                                 notification = notification,
+                                enabled = !notificationsLoading && !notificationsOffline && !notificationsAccessDenied,
                                 onMarkRead = onNotificationRead,
                                 onArchive = onNotificationArchive,
                                 onUnarchive = onNotificationUnarchive,
@@ -178,18 +183,19 @@ fun AccountSettingsScreen(
 private fun NotificationPreferencesCard(
     preference: RiderNotificationPreference,
     preferenceSaved: Boolean,
+    enabled: Boolean,
     onPreferenceChange: (RiderNotificationPreference) -> Unit,
 ) {
     RiderCard {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(appText(RiderText.NotificationPreferences), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            NotificationSwitch(appText(RiderText.NotificationPush), preference.pushEnabled) {
+            NotificationSwitch(appText(RiderText.NotificationPush), preference.pushEnabled, enabled) {
                 onPreferenceChange(preference.copy(eventType = RiderNotificationPreferenceEventType.ALL, pushEnabled = it))
             }
-            NotificationSwitch(appText(RiderText.NotificationInApp), preference.inAppEnabled) {
+            NotificationSwitch(appText(RiderText.NotificationInApp), preference.inAppEnabled, enabled) {
                 onPreferenceChange(preference.copy(eventType = RiderNotificationPreferenceEventType.ALL, inAppEnabled = it))
             }
-            NotificationSwitch(appText(RiderText.NotificationSms), preference.smsEnabled) {
+            NotificationSwitch(appText(RiderText.NotificationSms), preference.smsEnabled, enabled) {
                 onPreferenceChange(preference.copy(eventType = RiderNotificationPreferenceEventType.ALL, smsEnabled = it))
             }
             if (preferenceSaved) {
@@ -200,16 +206,17 @@ private fun NotificationPreferencesCard(
 }
 
 @Composable
-private fun NotificationSwitch(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+private fun NotificationSwitch(label: String, checked: Boolean, enabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         Text(label, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
     }
 }
 
 @Composable
 private fun NotificationRow(
     notification: RiderNotification,
+    enabled: Boolean,
     onMarkRead: (RiderNotification) -> Unit,
     onArchive: (RiderNotification) -> Unit,
     onUnarchive: (RiderNotification) -> Unit,
@@ -230,12 +237,13 @@ private fun NotificationRow(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
                     onClick = { onMarkRead(notification) },
-                    enabled = notification.unread,
+                    enabled = enabled && notification.unread,
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(appText(RiderText.NotificationMarkRead))
                 }
                 Button(
+                    enabled = enabled,
                     onClick = {
                         if (notification.archived) {
                             onUnarchive(notification)
