@@ -1,4 +1,105 @@
-# Payout Structure
+# Recorded rider remuneration
+
+Task 22 implements authenticated visibility of recorded courier remuneration. The
+signed MVP references 41 and 125 distinguish independent courier remuneration
+from salaried work and require calculation/display of expected remuneration.
+References 67–70 describe configurable platform fees; they do not approve a new
+courier tariff or a one-week rider transfer deadline.
+
+## Current runtime
+
+Real sessions read the existing authenticated endpoints:
+
+- `GET /api/rider/payouts/summary`
+- `GET /api/rider/payouts/history`
+
+The server resolves the courier from the signed-in user. The app does not send a
+courier ID to select another account. Missing courier membership, expired sessions
+and denied roles do not fall back to demo balances. Local demo mode is explicit
+and labelled as simulated money.
+
+The app displays server values; it does not sum mission estimates to produce a
+balance or label all completed missions as paid. Loading, refresh failures and
+denied reads hide previous financial amounts/history until a successful refresh.
+Cancellation does not become a successful or offline financial result.
+
+## Summary fields
+
+| Field | Meaning |
+| --- | --- |
+| `earnedTotalCfa` | Net recorded independent earnings and applicable corrections |
+| `settledMissionCount` | Distinct independent delivery missions with earning ledger credits; no time-period claim |
+| `availableBalanceCfa` | Remaining recorded liability after holds, corrections and unverified transfer debits; not proof of cash availability |
+| `onHoldCfa` | Recorded amount held by the server |
+| `reviewRequiredCfa` | Ambiguous recorded amounts requiring review |
+| `unverifiedTransferCfa` | Recorded transfer debits lacking provider confirmation |
+| `paidCfa`, `processingCfa` | Provider-confirmed amounts; currently zero while transfers are not integrated |
+| `transferStatus` | Currently `NOT_INTEGRATED` |
+
+The old `paidOrProcessingCfa` aggregate is not a last transfer. The app does not
+invent a last-transfer amount, reference or date. When an older response omits
+new totals, the corresponding display is unavailable instead of a local estimate.
+
+## Workforce and history
+
+New salaried missions do not create independent courier pay. A later workforce
+change does not erase recorded independent liabilities from earlier missions.
+The current salary flag therefore does not hide historical independent totals.
+History uses the mission's recorded workforce snapshot where available; ambiguous
+legacy amounts remain visible as requiring review.
+
+History displays the source reference, raw ledger amount, remuneration effect,
+status, server timestamp and description. Credit/debit direction determines the
+sign of the remuneration effect. Missing direction does not become positive
+income. Company delivery shortfall is an operational expense, not additional
+courier earnings. Non-applicable entries have no remuneration effect.
+
+`REVIEW_REQUIRED` covers ambiguous legacy entries and unverified transfer records.
+An old `PAID` or `PROCESSING` label alone does not establish a provider-confirmed
+transfer. The app labels such records cautiously and shows the integration state.
+
+## Expected mission remuneration
+
+Mission views may display the server-provided expected courier amount. It is an
+estimate for that mission, separate from recorded earning history and actual
+transfers. Approved runtime configuration and the recorded workforce determine
+the server amount. Local fixture rates are test data, not production tariffs.
+
+When the customer fee is below approved independent courier remuneration, SEQUO
+records the shortfall separately. Salaried work remains covered by salary, with
+no independent per-order remuneration.
+
+## Provider execution is future work
+
+SequoRider currently has no withdrawal/request/transfer action. Recorded earnings,
+ledger corrections and an unverified payout debit do not prove money received.
+Provider execution and reconciliation belong to Task 26 and require approved
+configuration and provider evidence before paid/processing claims can be made.
+No rider payout SLA is introduced here.
+
+## Local verification
+
+`RiderPayoutClientTest` exercises authenticated summary/history reads, historical
+independent pay after a workforce change, signed holds/corrections, non-payable
+company shortfall, legacy missing fields and denied/unavailable reads.
+
+```sh
+./gradlew --offline :shared:testAndroidHostTest :shared:compileAndroidMain :shared:compileKotlinIosSimulatorArm64
+```
+
+Device rendering and actual provider transfers remain separate, unverified checks.
+
+# Historical planning proposal (unimplemented; requires separate business approval)
+
+The material below is retained from the earlier planning document for future
+review. Its mandatory wording does not define approved or implemented MVP
+behavior. In particular, the one-week rider payout SLA, payout-request interface,
+provider account requirements and transfer workflow are not current features or
+approved policy. Task 26 must verify scope, configuration and provider evidence
+before any of those proposals can become runtime behavior. The current Task 22
+implementation is the authenticated recorded-pay flow described above.
+
+## Historical payout structure proposal
 
 This document defines how SequoRider handles courier earnings, payout eligibility, provider rules, subsidies, holds, and auditability.
 
@@ -78,7 +179,7 @@ Earnings become `AVAILABLE` only after:
 
 ## Package Reception SLA
 
-Payout processing requests must be handled within one week of package reception.
+Historical proposal only; no rider transfer deadline is approved or implemented.
 
 Use this definition by mission type:
 

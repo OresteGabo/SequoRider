@@ -24,9 +24,9 @@ These rules override older Sequo documentation whenever there is a conflict:
 - Internal drivers receive fixed salaries and are excluded from per-order delivery fee splits.
 - Freelancers are paid per delivery.
 - If the customer delivery fee is lower than the required courier rate, Sequo covers the difference.
-- Courier payouts are digital only through Yas Togo and Moov Africa.
-- Cash withdrawal flows are not supported.
-- Payout processing requests must be handled within one week of the relevant package reception event.
+- The app shows authenticated server-recorded remuneration. Provider transfers are not integrated; no withdrawal or payout-request action is available.
+- Current salaried work earns no independent delivery pay. Historical independent liabilities remain visible after a workforce change.
+- No rider transfer deadline is introduced without an approved policy.
 - Route planning must support batch pickup and single-package consolidation routes for cooperative markets, including examples such as grouping items from Marche de Mulhouse.
 
 ## Documentation Map
@@ -34,7 +34,7 @@ These rules override older Sequo documentation whenever there is a conflict:
 Use these files as the operational source of truth for the rider application:
 
 - [FLEET_DISPATCH.md](FLEET_DISPATCH.md): rider classification rules, dispatch queues, assignment algorithm, capacity rules, map integration, and incident handling.
-- [PAYOUT_STRUCTURE.md](PAYOUT_STRUCTURE.md): freelancer earnings, internal-driver exclusion from delivery splits, Sequo subsidy handling, digital payout workflow, audit requirements, and SLA rules.
+- [PAYOUT_STRUCTURE.md](PAYOUT_STRUCTURE.md): authenticated recorded remuneration, workforce snapshots, holds/corrections, unverified transfer records and the boundary with future provider execution.
 - [ROUTE_OPTIMIZATION.md](ROUTE_OPTIMIZATION.md): pickup grouping, cooperative-market consolidation, route scoring, map provider responsibilities, ETA handling, and optimization data models.
 
 ## Legacy Sequo Inputs Reviewed
@@ -75,10 +75,9 @@ Important legacy concepts preserved:
 
 Legacy concepts intentionally revised:
 
-- Older docs often treated rider payouts, payment providers, and dispatch automation as open questions. This repository defines them directly.
-- Older docs mentioned multiple payout providers such as Wave, Flooz, and TMoney. SequoRider courier payouts are restricted to Yas Togo and Moov Africa unless a later signed business rule changes this.
+- Recorded remuneration and provider transfers are separate. Task 22 supplies server-ledger reads; Task 26 will cover approved provider execution and reconciliation.
 - Older docs separated freelance immediate delivery from internal scheduled logistics. This repository adds subscriber-first internal dispatch for eligible orders, with overflow to freelancers.
-- Older docs allowed broad cash and manual-money assumptions for early pilots. SequoRider payout processing avoids cash withdrawals entirely.
+- Local fixture balances and rates do not establish production tariffs or completed transfers.
 
 ## Rider Types
 
@@ -109,8 +108,8 @@ SequoRider should provide:
 - Status updates for accepted, en route to pickup, arrived at pickup, picked up, en route to dropoff, arrived at dropoff, delivered, failed, and returned.
 - Proof-of-delivery capture with PIN, photo, signature, recipient confirmation, or admin override depending on order policy.
 - Incident reporting for missing package, customer absent, address unclear, damaged package, payment anomaly, or safety issue.
-- Earnings visibility only for freelancers.
-- Payout request initiation only for eligible freelancer balances.
+- Server-recorded independent earnings and historical workforce snapshots, including historical independent pay for a currently salaried rider.
+- Recorded balance/history refresh with explicit loading, denied and unavailable states; no payout request or withdrawal action.
 
 ## Recommended Shared Domain Modules
 
@@ -182,11 +181,11 @@ SequoRider must not calculate final platform finance locally. The mobile app can
 - Sequo subsidy amount when delivery fee is below courier rate.
 - Freelancer earning ledger.
 - Internal driver salary exclusion.
-- Payout request status.
-- Payout provider transfer IDs.
+- Recorded earning, hold, correction and unverified transfer status.
+- Provider-confirmed transfer evidence when provider execution is implemented.
 - Corrections, holds, disputes, and audit logs.
 
-See [PAYOUT_STRUCTURE.md](PAYOUT_STRUCTURE.md) for the payout workflow.
+See [PAYOUT_STRUCTURE.md](PAYOUT_STRUCTURE.md) for the current recorded-pay flow and future provider boundary. The mission count is ledger-backed and is not a current-period completion count; mission estimates are not summed into a balance.
 
 ## Repository Structure
 
@@ -254,7 +253,7 @@ The first production tests should cover:
 - Internal driver exclusion from per-order delivery payout.
 - Freelancer payout ledger creation after completed delivery.
 - Sequo subsidy when customer delivery fee is below courier rate.
-- Digital-only payout provider validation for Yas Togo and Moov Africa.
+- Authenticated recorded remuneration reads, signed correction/hold display and unverified transfer disclosure; provider execution remains Task 26.
 - Route batching for cooperative market pickups.
 - Reassignment after rider rejection, timeout, or capacity change.
 - PIN or proof-of-delivery validation before mission completion.
