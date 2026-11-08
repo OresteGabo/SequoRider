@@ -16,12 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
+import dev.orestegabo.sequorider.model.PayoutEntryStatus
 import dev.orestegabo.sequorider.model.PayoutHistoryItem
 import dev.orestegabo.sequorider.model.PayoutSummary
-import dev.orestegabo.sequorider.model.MissionStatus
-import dev.orestegabo.sequorider.model.RiderMission
-import dev.orestegabo.sequorider.model.RiderFleetClass
-import dev.orestegabo.sequorider.model.RiderProfile
 import dev.orestegabo.sequorider.model.formatCfa
 import dev.orestegabo.sequorider.ui.components.RiderCard
 import dev.orestegabo.sequorider.ui.components.RiderKeyValueRow
@@ -29,105 +26,95 @@ import dev.orestegabo.sequorider.ui.components.RiderMetric
 
 @Composable
 fun PayoutScreen(
-    profile: RiderProfile,
-    summary: PayoutSummary,
+    summary: PayoutSummary?,
     history: List<PayoutHistoryItem>,
-    missions: List<RiderMission>,
     isLoading: Boolean,
     isOffline: Boolean,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
+    accessDenied: Boolean = false,
+    isDemo: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    val completedMissions = missions.filter { it.status == MissionStatus.DELIVERED_TO_CUSTOMER || it.status == MissionStatus.RELEASED_BY_RELAY }
-    val currentPeriodEarnings = completedMissions.sumOf { it.expectedPayoutCfa ?: 0 }
-    LazyColumn(
-        modifier = modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    val actual = summary.takeUnless { isLoading || isOffline }
+    LazyColumn(modifier = modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(appText(RiderText.PayoutVisibility), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(appText(RiderText.DigitalOnly), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
-                    when {
-                        isLoading -> appText(RiderText.PayoutLoading)
-                        isOffline -> appText(RiderText.PayoutOffline)
-                        else -> summary.message ?: appText(RiderText.NotAvailableYet)
-                    },
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (isDemo) Text(appText(RiderText.PayoutLocalDemo))
+                Text(when {
+                    isLoading -> appText(RiderText.PayoutLoading)
+                    accessDenied -> appText(RiderText.PayoutAccessDenied)
+                    isOffline -> appText(RiderText.PayoutOffline)
+                    else -> actual?.message ?: appText(RiderText.NotAvailableYet)
+                }, color = if (isOffline) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(appText(RiderText.NoPayoutExecution), style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = onRefresh) {
-                        Text(appText(RiderText.Refresh))
-                    }
-                    if (isOffline) {
-                        Button(onClick = onRetry) {
-                            Text(appText(RiderText.Retry))
-                        }
-                    }
+                    OutlinedButton(onClick = onRefresh, enabled = !isLoading) { Text(appText(RiderText.Refresh)) }
+                    if (isOffline) Button(onClick = onRetry, enabled = !isLoading) { Text(appText(RiderText.Retry)) }
                 }
             }
         }
-        if (profile.fleetClass == RiderFleetClass.InternalDriver || !summary.payable) {
+        if (actual != null) {
+            if (!actual.payable) {
+                item { RiderCard { Text(appText(RiderText.SalaryHandledOutsideSplits), Modifier.padding(14.dp)) } }
+            }
+            if (actual.payable || (actual.earnedTotalCfa ?: 0) > 0 || actual.availableCfa > 0 || actual.onHoldCfa > 0) {
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        RiderMetric(appText(RiderText.RecordedEarnings), actual.earnedTotalCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet), Modifier.weight(1f))
+                        RiderMetric(appText(RiderText.MissionsWithRecordedPay), actual.settledMissionCount?.toString() ?: appText(RiderText.NotAvailableYet), Modifier.weight(1f))
+                    }
+                }
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        RiderMetric(appText(RiderText.RecordedRemainingPay), actual.availableCfa.formatCfa(), Modifier.weight(1f))
+                        RiderMetric(appText(RiderText.HeldRecordedPay), actual.onHoldCfa.formatCfa(), Modifier.weight(1f))
+                    }
+                }
+            }
+            actual.reviewRequiredCfa?.let { amount ->
+                item { RiderMetric(appText(RiderText.ReviewRequiredAmount), amount.formatCfa(), Modifier.fillMaxWidth()) }
+            }
             item {
                 RiderCard {
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(summary.message ?: appText(RiderText.SalaryHandledOutsideSplits), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        RiderKeyValueRow(appText(RiderText.CompletedDeliveries), completedMissions.size.toString())
+                        Text(appText(if (actual.transferStatus == "NOT_INTEGRATED") RiderText.TransferNotIntegrated else RiderText.TransferVerificationUnavailable))
+                        RiderKeyValueRow(appText(RiderText.ConfirmedTransfers), actual.paidCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
+                        RiderKeyValueRow(appText(RiderText.ProcessingTransfers), actual.processingCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
+                        RiderKeyValueRow(appText(RiderText.UnverifiedTransfers), actual.unverifiedTransferCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
                     }
                 }
             }
-        } else {
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    RiderMetric(appText(RiderText.CurrentPeriodEarnings), currentPeriodEarnings.formatCfa(), Modifier.weight(1f))
-                    RiderMetric(appText(RiderText.CompletedDeliveries), completedMissions.size.toString(), Modifier.weight(1f))
-                }
-            }
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    RiderMetric(appText(RiderText.PendingPayout), summary.availableCfa.formatCfa(), Modifier.weight(1f))
-                    RiderMetric(appText(RiderText.HeldProblemPayout), summary.onHoldCfa.formatCfa(), Modifier.weight(1f))
-                }
-            }
-            item {
-                RiderMetric(appText(RiderText.PaidOrProcessing), summary.paidOrProcessingCfa.formatCfa(), Modifier.fillMaxWidth())
-            }
-            item {
-                RiderCard {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RiderKeyValueRow(appText(RiderText.PendingReview), summary.pendingReviewCfa.formatCfa())
-                        RiderKeyValueRow(appText(RiderText.LastPayout), summary.lastPayoutCfa.formatCfa())
-                        RiderKeyValueRow(appText(RiderText.PayoutMethod), profile.payoutProvider.orEmpty().ifBlank { appText(RiderText.NotAvailableYet) })
-                        RiderKeyValueRow(appText(RiderText.PayoutStatus), summary.status.name)
-                        Text(appText(RiderText.NoPayoutExecution), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-        }
-        item {
-            Text(appText(RiderText.PayoutHistory), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        if (history.isEmpty()) {
-            item {
-                RiderCard {
-                    Text(
-                        appText(RiderText.PayoutHistoryEmpty),
-                        modifier = Modifier.fillMaxWidth().padding(14.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        } else {
-            history.forEach { payout ->
-                item {
-                    RiderCard {
-                        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            RiderKeyValueRow(appText(RiderText.MissionId), payout.missionId)
-                            RiderKeyValueRow(appText(RiderText.PayableAmount), payout.payableAmountCfa.formatCfa())
-                            RiderKeyValueRow(appText(RiderText.Status), payout.status.name)
-                            Text(payout.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            item { Text(appText(RiderText.PayoutHistory), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+            if (history.isEmpty()) {
+                item { RiderCard { Text(appText(RiderText.PayoutHistoryEmpty), Modifier.padding(14.dp)) } }
+            } else {
+                history.forEach { record ->
+                    item(key = record.id) {
+                        RiderCard {
+                            Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                RiderKeyValueRow(appText(RiderText.SourceReference), record.missionId)
+                                RiderKeyValueRow(appText(RiderText.RecordedAmount), record.amountCfa.formatCfa())
+                                RiderKeyValueRow(appText(RiderText.RecordedPayImpact), record.recordedPayImpactCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
+                                Text(appText(RiderText.Status) + ": " + appText(when (record.status) {
+                                    PayoutEntryStatus.AVAILABLE -> RiderText.LedgerEntryAvailable
+                                    PayoutEntryStatus.ON_HOLD -> RiderText.LedgerEntryHold
+                                    PayoutEntryStatus.CORRECTED -> RiderText.LedgerEntryCorrection
+                                    PayoutEntryStatus.REVIEW_REQUIRED -> RiderText.LedgerEntryReview
+                                    PayoutEntryStatus.PAID -> RiderText.LedgerEntryRecordedPaid
+                                    PayoutEntryStatus.PROCESSING -> RiderText.LedgerEntryRecordedProcessing
+                                    PayoutEntryStatus.NOT_APPLICABLE -> RiderText.LedgerEntryNotApplicable
+                                }))
+                                RiderKeyValueRow(appText(RiderText.HistoricalWorkforce), appText(when (record.workforceType) {
+                                    "Freelancer" -> RiderText.WorkforceFreelancer
+                                    "SequoSalaried" -> RiderText.WorkforceSalaried
+                                    else -> RiderText.WorkforceUnknown
+                                }))
+                                Text(record.createdAt, style = MaterialTheme.typography.bodySmall)
+                                Text(record.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
                 }

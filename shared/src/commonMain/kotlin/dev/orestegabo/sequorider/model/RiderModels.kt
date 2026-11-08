@@ -66,6 +66,7 @@ enum class PayoutStatus {
     PendingCompletion,
     Available,
     OnHold,
+    ReviewRequired,
     Requested,
     Processing,
     Paid,
@@ -78,6 +79,7 @@ enum class PayoutEntryStatus {
     PROCESSING,
     PAID,
     CORRECTED,
+    REVIEW_REQUIRED,
 }
 
 data class RiderProfile(
@@ -176,12 +178,20 @@ data class PayoutSummary(
     val availableCfa: Int,
     val pendingReviewCfa: Int,
     val onHoldCfa: Int,
-    val lastPayoutCfa: Int,
+    val lastPayoutCfa: Int? = null,
     val status: PayoutStatus,
     val payable: Boolean = true,
-    val paidOrProcessingCfa: Int = lastPayoutCfa,
+    val paidOrProcessingCfa: Int = 0,
     val historyCount: Int = 0,
     val message: String? = null,
+    val workforceType: String? = null,
+    val earnedTotalCfa: Int? = null,
+    val settledMissionCount: Int? = null,
+    val processingCfa: Int? = null,
+    val paidCfa: Int? = null,
+    val transferStatus: String? = null,
+    val unverifiedTransferCfa: Int? = null,
+    val reviewRequiredCfa: Int? = null,
 )
 
 data class PayoutHistoryItem(
@@ -193,7 +203,19 @@ data class PayoutHistoryItem(
     val payableToRider: Boolean,
     val description: String,
     val createdAt: String,
-)
+    val workforceType: String? = null,
+    val account: String? = null,
+    val direction: String? = null,
+) {
+    // Amounts are magnitudes in the ledger; the server direction determines the display sign.
+    val recordedPayImpactCfa: Int?
+        get() = when {
+            status == PayoutEntryStatus.NOT_APPLICABLE || payableAmountCfa == 0 -> 0
+            direction == "Debit" -> if (payableAmountCfa > 0) -payableAmountCfa else payableAmountCfa
+            direction == "Credit" && payableAmountCfa >= 0 -> payableAmountCfa
+            else -> null
+        }
+}
 
 enum class RiderNotificationSeverity {
     INFO,

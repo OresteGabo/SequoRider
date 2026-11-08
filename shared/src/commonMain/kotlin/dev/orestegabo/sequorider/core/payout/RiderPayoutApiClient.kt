@@ -27,6 +27,8 @@ class RiderPayoutApiClient(
             bearer()
         }.body<List<RiderPayoutHistoryItemDto>>().map { it.toModel() }
 
+    fun close() = httpClient.close()
+
     private fun io.ktor.client.request.HttpRequestBuilder.bearer() {
         accessTokenProvider()?.takeIf { it.isNotBlank() }?.let { bearerAuth(it) }
     }
@@ -41,6 +43,8 @@ class NetworkRiderPayoutRepository(
     override suspend fun summary(): PayoutSummary = apiClient.summary()
 
     override suspend fun history(): List<PayoutHistoryItem> = apiClient.history()
+
+    override fun close() = apiClient.close()
 }
 
 @Serializable
@@ -53,19 +57,27 @@ private data class RiderPayoutSummaryDto(
     val paidOrProcessingCfa: Int,
     val historyCount: Int,
     val message: String,
+    val earnedTotalCfa: Int? = null,
+    val settledMissionCount: Int? = null,
+    val processingCfa: Int? = null,
+    val paidCfa: Int? = null,
+    val transferStatus: String? = null,
+    val unverifiedTransferCfa: Int? = null,
+    val reviewRequiredCfa: Int? = null,
 ) {
     fun toModel(): PayoutSummary =
         PayoutSummary(
             availableCfa = availableBalanceCfa,
             pendingReviewCfa = 0,
             onHoldCfa = onHoldCfa,
-            lastPayoutCfa = paidOrProcessingCfa,
             status = if (!payable) {
                 PayoutStatus.NotApplicable
             } else if (availableBalanceCfa > 0) {
                 PayoutStatus.Available
             } else if (onHoldCfa > 0) {
                 PayoutStatus.OnHold
+            } else if ((reviewRequiredCfa ?: 0) > 0) {
+                PayoutStatus.ReviewRequired
             } else {
                 PayoutStatus.PendingCompletion
             },
@@ -73,6 +85,14 @@ private data class RiderPayoutSummaryDto(
             paidOrProcessingCfa = paidOrProcessingCfa,
             historyCount = historyCount,
             message = message,
+            workforceType = workforceType,
+            earnedTotalCfa = earnedTotalCfa,
+            settledMissionCount = settledMissionCount,
+            processingCfa = processingCfa,
+            paidCfa = paidCfa,
+            transferStatus = transferStatus,
+            unverifiedTransferCfa = unverifiedTransferCfa,
+            reviewRequiredCfa = reviewRequiredCfa,
         )
 }
 
@@ -86,6 +106,9 @@ private data class RiderPayoutHistoryItemDto(
     val payableToRider: Boolean,
     val description: String,
     val createdAt: String,
+    val workforceType: String? = null,
+    val account: String? = null,
+    val direction: String? = null,
 ) {
     fun toModel(): PayoutHistoryItem =
         PayoutHistoryItem(
@@ -97,5 +120,8 @@ private data class RiderPayoutHistoryItemDto(
             payableToRider = payableToRider,
             description = description,
             createdAt = createdAt,
+            workforceType = workforceType,
+            account = account,
+            direction = direction,
         )
 }

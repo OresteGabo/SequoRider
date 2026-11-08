@@ -8,6 +8,7 @@ import dev.orestegabo.sequorider.model.PayoutStatus
 interface RiderPayoutRepository {
     suspend fun summary(): PayoutSummary
     suspend fun history(): List<PayoutHistoryItem>
+    fun close() {}
 }
 
 class DemoPayoutRepository : RiderPayoutRepository {

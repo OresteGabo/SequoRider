@@ -14,6 +14,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +45,8 @@ import dev.orestegabo.sequorider.core.notifications.RiderNotificationsRepository
 import dev.orestegabo.sequorider.core.payout.DemoPayoutRepository
 import dev.orestegabo.sequorider.core.payout.NetworkRiderPayoutRepository
 import dev.orestegabo.sequorider.core.payout.RiderPayoutApiClient
-import dev.orestegabo.sequorider.core.payout.safePayoutFallbackSummary
+import dev.orestegabo.sequorider.core.network.SequoApiException
+import dev.orestegabo.sequorider.model.PayoutSummary
 import dev.orestegabo.sequorider.feature.auth.RiderAuthScreen
 import dev.orestegabo.sequorider.feature.settings.AccountSettingsScreen
 import dev.orestegabo.sequorider.feature.settings.AppLanguage
@@ -65,6 +67,7 @@ import dev.orestegabo.sequorider.ui.missions.MissionsScreen
 import dev.orestegabo.sequorider.ui.payout.PayoutScreen
 import dev.orestegabo.sequorider.ui.route.ActiveRouteScreen
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,6 +115,7 @@ fun SequoRiderShell(
             DemoPayoutRepository()
         }
     }
+    DisposableEffect(payoutRepository) { onDispose(payoutRepository::close) }
     val notificationsRepository: RiderNotificationsRepository = remember(signedInUser, accessToken, useLocalDemo) {
         if (!useLocalDemo) {
             NetworkRiderNotificationsRepository(
@@ -127,10 +131,12 @@ fun SequoRiderShell(
     var missionActionInProgressId by remember { mutableStateOf<String?>(null) }
     var missionActionFailed by remember { mutableStateOf(false) }
     var selectedMissionId by remember { mutableStateOf<String?>(null) }
-    var payoutSummary by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(if (useLocalDemo) DemoRiderData.payoutSummary else safePayoutFallbackSummary()) }
+    var payoutSummary by remember(signedInUser?.id, useLocalDemo) { mutableStateOf<PayoutSummary?>(if (useLocalDemo) DemoRiderData.payoutSummary else null) }
     var payoutHistory by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(if (useLocalDemo) DemoRiderData.payoutHistory else emptyList<PayoutHistoryItem>()) }
-    var payoutLoading by remember { mutableStateOf(false) }
-    var payoutOffline by remember { mutableStateOf(false) }
+    var payoutLoading by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
+    var payoutOffline by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
+    var payoutAccessDenied by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(false) }
+    var payoutRefresh by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(0) }
     var notifications by remember(signedInUser?.id, useLocalDemo) { mutableStateOf(if (useLocalDemo) DemoRiderData.notifications else emptyList<RiderNotification>()) }
     var notificationPreference by remember { mutableStateOf(RiderNotificationPreference()) }
     var notificationsLoading by remember { mutableStateOf(false) }
@@ -169,25 +175,7 @@ fun SequoRiderShell(
         }
     }
 
-    fun refreshPayout(showLoading: Boolean = true) {
-        if (!useLocalDemo && signedInUser == null) return
-        scope.launch {
-            if (showLoading) payoutLoading = true
-            runCatching { payoutRepository.summary() to payoutRepository.history() }
-                .onSuccess { (summary, history) ->
-                    payoutSummary = summary
-                    payoutHistory = history
-                    payoutOffline = false
-                }
-                .onFailure {
-                    if (payoutHistory.isEmpty()) {
-                        payoutSummary = safePayoutFallbackSummary()
-                    }
-                    payoutOffline = true
-                }
-            payoutLoading = false
-        }
-    }
+    fun refreshPayout() { payoutRefresh++ }
 
     fun refreshNotifications(showLoading: Boolean = true) {
         if (!useLocalDemo && signedInUser == null) return
@@ -304,8 +292,24 @@ fun SequoRiderShell(
         missionsLoading = false
     }
 
-    LaunchedEffect(payoutRepository) {
-        refreshPayout(showLoading = false)
+    LaunchedEffect(payoutRepository, payoutRefresh) {
+        payoutSummary = null
+        payoutHistory = emptyList()
+        payoutOffline = false
+        payoutAccessDenied = false
+        if (!useLocalDemo && signedInUser == null) return@LaunchedEffect
+        payoutLoading = true
+        try {
+            val summary = payoutRepository.summary()
+            val history = payoutRepository.history()
+            payoutSummary = summary
+            payoutHistory = history
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            payoutOffline = true
+            payoutAccessDenied = (error as? SequoApiException)?.statusCode in setOf(401, 403)
+        } finally { payoutLoading = false }
     }
 
     LaunchedEffect(notificationsRepository, includeArchivedNotifications) {
@@ -466,11 +470,11 @@ fun SequoRiderShell(
                             modifier = Modifier.fillMaxSize(),
                         )
                         RiderSection.Payout -> PayoutScreen(
-                            profile = profile,
                             summary = payoutSummary,
                             history = payoutHistory,
-                            missions = missions,
                             isLoading = payoutLoading,
+                            accessDenied = payoutAccessDenied,
+                            isDemo = useLocalDemo,
                             isOffline = payoutOffline,
                             onRefresh = { refreshPayout() },
                             onRetry = { refreshPayout() },
