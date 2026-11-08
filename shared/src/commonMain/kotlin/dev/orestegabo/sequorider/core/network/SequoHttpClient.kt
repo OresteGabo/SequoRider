@@ -18,7 +18,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 fun createSequoHttpClient(
-    baseUrl: String = NetworkConfig.ProductionBaseUrl,
+    baseUrl: String = NetworkConfig.BaseUrl,
     json: Json = defaultNetworkJson,
     accessTokenProvider: (() -> String?)? = null,
 ): HttpClient = HttpClient {

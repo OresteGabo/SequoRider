@@ -31,7 +31,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 class RiderMissionApiClient(
-    private val baseUrl: String = NetworkConfig.ProductionBaseUrl,
+    private val baseUrl: String = NetworkConfig.BaseUrl,
     private val accessTokenProvider: () -> String?,
     private val httpClient: HttpClient = createMissionHttpClient(),
 ) {

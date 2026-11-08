@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequorider.core.network.NetworkConfig
 import dev.orestegabo.sequorider.model.RiderAvailability
 import dev.orestegabo.sequorider.model.RiderNotification
 import dev.orestegabo.sequorider.model.RiderNotificationEventType
@@ -96,6 +97,17 @@ fun AccountSettingsScreen(
                         )
                     }
                     RiderKeyValueRow(appText(RiderText.Theme), appText(RiderText.System))
+                }
+            }
+        }
+        item {
+            RiderCard {
+                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(appText(RiderText.ReleaseBuild), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    RiderKeyValueRow(appText(RiderText.ReleaseId), NetworkConfig.ReleaseId)
+                    RiderKeyValueRow(appText(RiderText.BuildEnvironment), NetworkConfig.Environment)
+                    Text(appText(RiderText.ApiServer), style = MaterialTheme.typography.labelMedium)
+                    Text(NetworkConfig.BaseUrl, style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }

@@ -17,7 +17,7 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 
 class RiderNotificationsApiClient(
-    private val baseUrl: String = NetworkConfig.ProductionBaseUrl,
+    private val baseUrl: String = NetworkConfig.BaseUrl,
     private val accessTokenProvider: () -> String?,
     private val httpClient: HttpClient = createSequoHttpClient(baseUrl = baseUrl),
 ) {

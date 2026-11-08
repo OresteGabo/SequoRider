@@ -1,5 +1,6 @@
 package dev.orestegabo.sequorider.core.auth
 
+import dev.orestegabo.sequorider.core.network.NetworkConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
@@ -24,7 +25,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 class AuthApiClient(
-    private val baseUrl: String = ProductionBaseUrl,
+    private val baseUrl: String = NetworkConfig.BaseUrl,
     private val httpClient: HttpClient = createAuthHttpClient(),
     private val deviceIdProvider: () -> String,
 ) {
@@ -150,8 +151,6 @@ private val authJson = Json {
     ignoreUnknownKeys = true
     isLenient = true
 }
-
-private const val ProductionBaseUrl = "https://api.sequoservice.com"
 
 private class RiderAuthHttpException(
     val statusCode: Int?,

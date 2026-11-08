@@ -13,7 +13,7 @@ import io.ktor.client.request.get
 import kotlinx.serialization.Serializable
 
 class RiderPayoutApiClient(
-    private val baseUrl: String = NetworkConfig.ProductionBaseUrl,
+    private val baseUrl: String = NetworkConfig.BaseUrl,
     private val accessTokenProvider: () -> String?,
     private val httpClient: HttpClient = createSequoHttpClient(baseUrl = baseUrl),
 ) {

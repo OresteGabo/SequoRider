@@ -12,7 +12,7 @@ import io.ktor.client.request.setBody
 import kotlinx.serialization.Serializable
 
 class AdminLoginApprovalApiClient(
-    private val baseUrl: String = NetworkConfig.ProductionBaseUrl,
+    private val baseUrl: String = NetworkConfig.BaseUrl,
     private val accessTokenProvider: () -> String?,
     private val httpClient: HttpClient = createSequoHttpClient(
         baseUrl = baseUrl,
