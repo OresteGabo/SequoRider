@@ -129,25 +129,6 @@ fun ActiveRouteScreen(
             }
         }
 
-        item {
-            RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(appText(RiderText.RouteSummary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RiderMetric(appText(RiderText.PackageCount), mission.packageCount.toString(), Modifier.weight(1f))
-                        RiderMetric(appText(RiderText.EtaSla), missionEtaText(mission.etaMinutes, mission.slaLabel), Modifier.weight(1f))
-                    }
-                    RiderKeyValueRow(appText(RiderText.MissionCode), mission.code)
-                    RiderKeyValueRow(appText(RiderText.MissionId), mission.id)
-                    RiderKeyValueRow(appText(RiderText.OrderId), mission.orderId)
-                    RiderKeyValueRow(appText(RiderText.MissionType), missionModeText(mission.deliveryOptionId, mission.serviceType.name))
-                    mission.assignmentWorkforceType?.let { RiderKeyValueRow(appText(RiderText.Workforce), missionWorkforceText(it)) }
-                    RiderKeyValueRow(appText(RiderText.Distance), mission.distanceKm.ifBlank { appText(RiderText.NotAvailableYet) })
-                    RiderKeyValueRow(appText(RiderText.PayoutPreview), mission.expectedPayoutCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
-                }
-            }
-        }
-
         if (nextStep == RiderMissionStep.HomeDelivery) {
             item {
                 HomeDeliveryPanel(
@@ -204,10 +185,6 @@ fun ActiveRouteScreen(
                             RiderMetric(appText(RiderText.PickupSource), mission.pickupSourceLabel(), Modifier.weight(1f))
                             RiderMetric(appText(RiderText.ExpectedPackages), mission.packageCount.toString(), Modifier.weight(1f))
                         }
-                        OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth(), enabled = false) {
-                            Text(appText(RiderText.ScanPackage))
-                        }
-                        Text(appText(RiderText.ScanPlaceholder), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         OutlinedTextField(
                             value = custodyNote,
                             onValueChange = { custodyNote = sanitizePickupText(it, MaxCustodyNoteLength) },
@@ -235,7 +212,30 @@ fun ActiveRouteScreen(
                                 Text(appText(RiderText.CannotPickup))
                             }
                         }
+                        OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth(), enabled = false) {
+                            Text(appText(RiderText.ScanPackage))
+                        }
+                        Text(appText(RiderText.ScanPlaceholder), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                }
+            }
+        }
+
+        item {
+            RiderCard {
+                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(appText(RiderText.RouteSummary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        RiderMetric(appText(RiderText.PackageCount), mission.packageCount.toString(), Modifier.weight(1f))
+                        RiderMetric(appText(RiderText.EtaSla), missionEtaText(mission.etaMinutes, mission.slaLabel), Modifier.weight(1f))
+                    }
+                    RiderKeyValueRow(appText(RiderText.MissionCode), mission.code)
+                    RiderKeyValueRow(appText(RiderText.MissionId), mission.id)
+                    RiderKeyValueRow(appText(RiderText.OrderId), mission.orderId)
+                    RiderKeyValueRow(appText(RiderText.MissionType), missionModeText(mission.deliveryOptionId, mission.serviceType.name))
+                    mission.assignmentWorkforceType?.let { RiderKeyValueRow(appText(RiderText.Workforce), missionWorkforceText(it)) }
+                    RiderKeyValueRow(appText(RiderText.Distance), mission.distanceKm.ifBlank { appText(RiderText.NotAvailableYet) })
+                    RiderKeyValueRow(appText(RiderText.PayoutPreview), mission.expectedPayoutCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
                 }
             }
         }
