@@ -1,18 +1,13 @@
 package dev.orestegabo.sequorider.ui.app
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import dev.orestegabo.sequo.design.SequoActionButton as Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -23,8 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequo.design.SequoDesign
+import dev.orestegabo.sequo.design.SequoPageHeader
 import dev.orestegabo.sequorider.core.auth.AuthApiClient
 import dev.orestegabo.sequorider.core.auth.AuthApiException
 import dev.orestegabo.sequorider.core.auth.AuthRepository
@@ -367,7 +362,7 @@ fun SequoRiderShell(
 
     CompositionLocalProvider(LocalAppLanguage provides language) {
         if (signedInUser == null && !useLocalDemo) {
-            Box(modifier = modifier.fillMaxSize().padding(PaddingValues(16.dp))) {
+            Box(modifier = modifier.fillMaxSize().padding(SequoDesign.ScreenGutter)) {
                 RiderAuthScreen(
                     isLoading = authLoading,
                     errorMessage = authError,
@@ -428,16 +423,10 @@ fun SequoRiderShell(
         Scaffold(
             modifier = modifier.fillMaxSize(),
             topBar = {
-                TopAppBar(
-                    // Android's host consumes safeDrawing; SwiftUI respects the system safe area.
-                    windowInsets = WindowInsets(0, 0, 0, 0),
-                    title = {
-                        Text(
-                            currentSection.label(),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    },
+                // Native hosts own safe-area insets; the shared header adds none.
+                SequoPageHeader(
+                    title = currentSection.label(),
+                    subtitle = appText(RiderText.AppName),
                     actions = {
                         if (useLocalDemo) {
                             Button(onClick = {
@@ -465,10 +454,6 @@ fun SequoRiderShell(
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    ),
                 )
             },
             bottomBar = {

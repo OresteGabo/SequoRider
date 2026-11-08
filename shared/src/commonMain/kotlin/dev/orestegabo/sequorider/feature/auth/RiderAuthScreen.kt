@@ -10,15 +10,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import dev.orestegabo.sequo.design.SequoActionButton as Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import dev.orestegabo.sequo.design.SequoOutlineButton as OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequo.design.SequoDesign
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.ui.components.RiderCard
@@ -37,7 +38,7 @@ fun RiderAuthScreen(
     modifier: Modifier = Modifier,
 ) {
     RiderCard(modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(SequoDesign.SectionGap)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Image(painterResource(Res.drawable.rider_brand_icon), contentDescription = null, modifier = Modifier.size(48.dp))
                 Text(appText(RiderText.AppName), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)

@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
+import dev.orestegabo.sequo.design.SequoActionButton as Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import dev.orestegabo.sequo.design.SequoOutlineButton as OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequo.design.SequoDesign
 import dev.orestegabo.sequorider.core.network.NetworkConfig
 import dev.orestegabo.sequorider.model.RiderAvailability
 import dev.orestegabo.sequorider.model.RiderNotification
@@ -54,15 +55,15 @@ fun AccountSettingsScreen(
 ) {
     val visibleNotifications = notifications.filter { includeArchivedNotifications || !it.archived }
     LazyColumn(
-        modifier = modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.padding(horizontal = SequoDesign.ScreenGutter),
+        verticalArrangement = Arrangement.spacedBy(SequoDesign.SectionGap),
     ) {
         item {
             Text(appText(RiderText.AccountSettings), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(profile.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
                         maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(profile.riderId, style = MaterialTheme.typography.bodySmall,
@@ -80,7 +81,7 @@ fun AccountSettingsScreen(
         }
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(appText(RiderText.Language), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         androidx.compose.material3.FilterChip(
@@ -102,7 +103,7 @@ fun AccountSettingsScreen(
         }
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(appText(RiderText.ReleaseBuild), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     RiderKeyValueRow(appText(RiderText.ReleaseId), NetworkConfig.ReleaseId)
                     RiderKeyValueRow(appText(RiderText.BuildEnvironment), NetworkConfig.Environment)
@@ -122,7 +123,7 @@ fun AccountSettingsScreen(
         if (pendingAdminLoginRequestCount > 0) {
             item {
                 RiderCard {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(appText(RiderText.AdminLoginRequests), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(appText(RiderText.AdminLoginWarning), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         OutlinedButton(onClick = onAdminLoginRequestsClick, modifier = Modifier.fillMaxWidth()) {
@@ -134,7 +135,7 @@ fun AccountSettingsScreen(
         }
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                         Column(Modifier.weight(1f)) {
                             Text(appText(RiderText.NotificationInbox), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -186,7 +187,7 @@ private fun NotificationPreferencesCard(
     onPreferenceChange: (RiderNotificationPreference) -> Unit,
 ) {
     RiderCard {
-        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(appText(RiderText.NotificationPreferences), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             NotificationSwitch(appText(RiderText.NotificationPush), preference.pushEnabled, enabled) {
                 onPreferenceChange(preference.copy(eventType = RiderNotificationPreferenceEventType.ALL, pushEnabled = it))

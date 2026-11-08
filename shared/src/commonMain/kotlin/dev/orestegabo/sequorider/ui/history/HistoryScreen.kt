@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import dev.orestegabo.sequo.design.SequoOutlineButton as OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequo.design.SequoDesign
 import dev.orestegabo.sequorider.feature.settings.missionStatusText
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
@@ -49,8 +50,8 @@ fun HistoryScreen(
     val filteredMissions = historyMissions.filter { it.status in selectedFilter.statuses }
 
     LazyColumn(
-        modifier = modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.padding(horizontal = SequoDesign.ScreenGutter),
+        verticalArrangement = Arrangement.spacedBy(SequoDesign.SectionGap),
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -74,7 +75,7 @@ fun HistoryScreen(
         }
         item {
             RiderCard {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         RiderMetric(appText(RiderText.Completed), historyMissions.count { it.status.isCompletedHistory() }.toString(), Modifier.weight(1f))
                         RiderMetric(appText(RiderText.Failed), historyMissions.count { it.status.isProblemHistory() }.toString(), Modifier.weight(1f))
@@ -99,7 +100,7 @@ fun HistoryScreen(
         if (!isLoading && filteredMissions.isEmpty()) {
             item {
                 RiderCard {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(appText(RiderText.HistoryEmpty), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (isOffline) {
                             OutlinedButton(onClick = onRetry, modifier = Modifier.fillMaxWidth()) {
@@ -119,7 +120,7 @@ fun HistoryScreen(
 @Composable
 private fun HistoryMissionCard(mission: RiderMission) {
     RiderCard {
-        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             RiderMissionHeader(
                 reference = mission.code,
                 route = missionRouteText(mission.pickupArea, mission.dropoffArea),

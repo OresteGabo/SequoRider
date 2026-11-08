@@ -13,6 +13,8 @@ val LocalAppLanguage = compositionLocalOf { AppLanguage.English }
 
 enum class RiderText {
     AppName,
+    NavRoute,
+    NavHistory,
     AppSubtitle,
     Missions,
     ActiveRoute,
@@ -298,6 +300,8 @@ private val englishText = mapOf(
     RiderText.LedgerEntryRecordedProcessing to "Recorded as processing",
     RiderText.LedgerEntryNotApplicable to "Not independent earnings",
     RiderText.AppName to "Sequo Rider",
+    RiderText.NavRoute to "Route",
+    RiderText.NavHistory to "History",
     RiderText.AppSubtitle to "Courier operations",
     RiderText.Missions to "Missions",
     RiderText.ActiveRoute to "Route",
@@ -550,6 +554,8 @@ private val frenchText = mapOf(
     RiderText.LedgerEntryRecordedProcessing to "Enregistré en traitement",
     RiderText.LedgerEntryNotApplicable to "Hors rémunération indépendante",
     RiderText.AppName to "Sequo Rider",
+    RiderText.NavRoute to "Trajet",
+    RiderText.NavHistory to "Archives",
     RiderText.AppSubtitle to "Operations coursier",
     RiderText.Missions to "Missions",
     RiderText.ActiveRoute to "Trajet",

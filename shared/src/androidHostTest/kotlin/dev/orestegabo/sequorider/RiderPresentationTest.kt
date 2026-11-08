@@ -51,7 +51,7 @@ class RiderPresentationTest {
                 assertNotEquals(status.name, label)
                 assertFalse(label.contains('_'))
             }
-            for (key in listOf(RiderText.ExitDemo, RiderText.LocalFixtureAccounts, RiderText.LocalFixtureDetail)) {
+            for (key in listOf(RiderText.ExitDemo, RiderText.LocalFixtureAccounts, RiderText.LocalFixtureDetail, RiderText.NavRoute, RiderText.NavHistory)) {
                 assertTrue(appText(key, language).isNotBlank())
             }
         }

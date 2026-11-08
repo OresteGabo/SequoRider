@@ -6,14 +6,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
+import dev.orestegabo.sequo.design.SequoActionButton as Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import dev.orestegabo.sequo.design.SequoOutlineButton as OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequo.design.SequoDesign
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.PayoutEntryStatus
@@ -37,7 +38,7 @@ fun PayoutScreen(
     modifier: Modifier = Modifier,
 ) {
     val actual = summary.takeUnless { isLoading || isOffline || accessDenied }
-    LazyColumn(modifier = modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(modifier = modifier.padding(horizontal = SequoDesign.ScreenGutter), verticalArrangement = Arrangement.spacedBy(SequoDesign.SectionGap)) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(appText(RiderText.PayoutVisibility), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -61,7 +62,7 @@ fun PayoutScreen(
                 val workforceCopy = if (actual.workforceType?.uppercase() in setOf("SEQUO_SALARIED", "SEQUOSALARIED", "SALARIED")) {
                     RiderText.SalaryHandledOutsideSplits
                 } else RiderText.WorkforceUnknown
-                item { RiderCard { Text(appText(workforceCopy), Modifier.padding(14.dp)) } }
+                item { RiderCard { Text(appText(workforceCopy), Modifier.padding(SequoDesign.CardPadding)) } }
             }
             if (actual.payable || (actual.earnedTotalCfa ?: 0) > 0 || actual.availableCfa > 0 || actual.onHoldCfa > 0) {
                 item {
@@ -82,7 +83,7 @@ fun PayoutScreen(
             }
             item {
                 RiderCard {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(appText(if (actual.transferStatus == "NOT_INTEGRATED") RiderText.TransferNotIntegrated else RiderText.TransferVerificationUnavailable))
                         RiderKeyValueRow(appText(RiderText.ConfirmedTransfers), actual.paidCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
                         RiderKeyValueRow(appText(RiderText.ProcessingTransfers), actual.processingCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
@@ -92,12 +93,12 @@ fun PayoutScreen(
             }
             item { Text(appText(RiderText.PayoutHistory), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
             if (history.isEmpty()) {
-                item { RiderCard { Text(appText(RiderText.PayoutHistoryEmpty), Modifier.padding(14.dp)) } }
+                item { RiderCard { Text(appText(RiderText.PayoutHistoryEmpty), Modifier.padding(SequoDesign.CardPadding)) } }
             } else {
                 history.forEach { record ->
                     item(key = record.id) {
                         RiderCard {
-                            Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 RiderKeyValueRow(appText(RiderText.SourceReference), record.missionId)
                                 RiderKeyValueRow(appText(RiderText.RecordedAmount), record.amountCfa.formatCfa())
                                 RiderKeyValueRow(appText(RiderText.RecordedPayImpact), record.recordedPayImpactCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))

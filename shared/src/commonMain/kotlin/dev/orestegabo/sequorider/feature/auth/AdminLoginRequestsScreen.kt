@@ -7,17 +7,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import dev.orestegabo.sequo.design.SequoActionButton as Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import dev.orestegabo.sequo.design.SequoOutlineButton as OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequo.design.SequoDesign
 import dev.orestegabo.sequorider.core.auth.AdminLoginRequestSummary
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
@@ -33,8 +34,8 @@ fun AdminLoginRequestsScreen(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.padding(horizontal = SequoDesign.ScreenGutter),
+        verticalArrangement = Arrangement.spacedBy(SequoDesign.SectionGap),
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -51,14 +52,14 @@ fun AdminLoginRequestsScreen(
         if (!isLoading && requests.isEmpty()) {
             item {
                 Card(Modifier.fillMaxWidth()) {
-                    Text(appText(RiderText.AdminLoginEmpty), modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(appText(RiderText.AdminLoginEmpty), modifier = Modifier.padding(SequoDesign.CardPadding), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
 
         items(requests, key = { it.requestId }) { request ->
             Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(request.code, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                     request.deviceLabel?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
                     request.browserInfo?.takeIf { it.isNotBlank() }?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }

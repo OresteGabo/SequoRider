@@ -9,10 +9,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import dev.orestegabo.sequo.design.SequoActionButton as Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import dev.orestegabo.sequo.design.SequoOutlineButton as OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequo.design.SequoDesign
 import dev.orestegabo.sequorider.feature.settings.missionModeText
 import dev.orestegabo.sequorider.feature.settings.missionWorkforceText
 import dev.orestegabo.sequorider.feature.settings.missionStatusText
@@ -99,13 +100,13 @@ fun ActiveRouteScreen(
     }
 
     LazyColumn(
-        modifier = modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.padding(horizontal = SequoDesign.ScreenGutter),
+        verticalArrangement = Arrangement.spacedBy(SequoDesign.SectionGap),
     ) {
         if (mission == null) {
             item {
                 RiderCard {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(appText(RiderText.ActiveRoute), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         Text(unavailableMessage ?: appText(RiderText.EmptyMissions), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -168,7 +169,7 @@ fun ActiveRouteScreen(
         if (mission.destinationType == MissionDestinationType.SEQUO_CONSOLIDATION) {
             item {
                 RiderCard {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(missionPlaceText(mission.dropoffStop.title), style = MaterialTheme.typography.titleMedium)
                         Text(appText(if (mission.status == MissionStatus.HANDED_TO_SEQUO) RiderText.ConsolidationReceived else RiderText.ConsolidationReceiptPending))
                     }
@@ -179,7 +180,7 @@ fun ActiveRouteScreen(
         if (nextStep == RiderMissionStep.Pickup) {
             item {
                 RiderCard {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(appText(RiderText.PickupFlow), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             RiderMetric(appText(RiderText.PickupSource), mission.pickupSourceLabel(), Modifier.weight(1f))
@@ -223,7 +224,7 @@ fun ActiveRouteScreen(
 
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(appText(RiderText.RouteSummary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         RiderMetric(appText(RiderText.PackageCount), mission.packageCount.toString(), Modifier.weight(1f))
@@ -242,7 +243,7 @@ fun ActiveRouteScreen(
 
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(appText(RiderText.StatusTimeline), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     TimelineRow(appText(RiderText.CreatedAt), mission.createdAt)
                     TimelineRow(appText(RiderText.AssignedAt), mission.assignedAt)
@@ -257,7 +258,7 @@ fun ActiveRouteScreen(
 
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(appText(RiderText.PickupStops), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     mission.pickupStops.forEach { stop ->
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -270,7 +271,7 @@ fun ActiveRouteScreen(
 
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         if (mission.destinationType == MissionDestinationType.RELAY_POINT) appText(RiderText.RelayStep) else appText(RiderText.DropoffStop),
                         style = MaterialTheme.typography.titleMedium,
@@ -287,7 +288,7 @@ fun ActiveRouteScreen(
 
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(appText(RiderText.ProofRequirements), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     mission.proofRequirements.ifEmpty { listOf(null) }.forEach { requirement ->
                         Text(
@@ -301,7 +302,7 @@ fun ActiveRouteScreen(
 
         item {
             RiderCard {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(appText(RiderText.RouteSteps), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     mission.displayRouteStops().forEach { stop ->
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -343,7 +344,7 @@ private fun HomeDeliveryPanel(
 ) {
     val pinRequired = ProofRequirement.DELIVERY_PIN in mission.proofRequirements
     RiderCard {
-        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(appText(RiderText.HomeDelivery), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             if (pinRequired) {
                 OutlinedTextField(
@@ -416,7 +417,7 @@ private fun RelayDepositPanel(
     onConfirmRelayDeposit: () -> Unit,
 ) {
     RiderCard {
-        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(appText(RiderText.RelayDeposit), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             RiderKeyValueRow(appText(RiderText.RelayPoint), missionPlaceText(mission.dropoffStop.title))
             OutlinedTextField(
