@@ -5,6 +5,8 @@ import dev.orestegabo.sequorider.core.network.SequoApiException
 import dev.orestegabo.sequorider.core.payout.NetworkRiderPayoutRepository
 import dev.orestegabo.sequorider.core.payout.RiderPayoutApiClient
 import dev.orestegabo.sequorider.model.PayoutEntryStatus
+import dev.orestegabo.sequorider.feature.settings.RiderText
+import dev.orestegabo.sequorider.ui.payout.payoutReference
 import java.net.InetSocketAddress
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -25,7 +27,7 @@ class RiderPayoutClientTest {
     @Test
     fun readsAuthoritativeRecordedPayAndHistoricalWorkforceWithoutTransferAliases() = runBlocking<Unit> {
         val history = """
-            [{"id":"earning","publicReference":"F00-000-09J","missionReference":"DZ9-X8W-7P3","missionId":"mission-1","amountCfa":500,"payableAmountCfa":500,
+            [{"id":"earning","missionReference":"DZ9-X8W-7P3","missionId":"mission-1","amountCfa":500,"payableAmountCfa":500,
               "status":"AVAILABLE","payableToRider":true,"description":"Recorded earning",
               "createdAt":"2026-11-08T10:00:00Z","workforceType":"Freelancer","account":"RiderPayable","direction":"Credit"},
              {"id":"hold","missionId":"mission-1","amountCfa":100,"payableAmountCfa":100,
@@ -34,7 +36,7 @@ class RiderPayoutClientTest {
              {"id":"correction","missionId":"mission-1","amountCfa":50,"payableAmountCfa":50,
               "status":"CORRECTED","payableToRider":true,"description":"Correction",
               "createdAt":"2026-11-08T10:02:00Z","workforceType":"Freelancer","account":"RiderPayable","direction":"Debit"},
-             {"id":"unverified","missionId":"payout-request-1","amountCfa":200,"payableAmountCfa":0,
+             {"id":"unverified","publicReference":"W12-345-65Q","missionId":"payout-request-1","amountCfa":200,"payableAmountCfa":0,
               "status":"REVIEW_REQUIRED","payableToRider":true,"description":"Unverified transfer entry",
               "createdAt":"2026-11-08T10:03:00Z","workforceType":null,"account":"Payout","direction":"Debit"},
              {"id":"shortfall","missionId":"mission-1","amountCfa":100,"payableAmountCfa":0,
@@ -59,6 +61,10 @@ class RiderPayoutClientTest {
             assertEquals("DZ9-X8W-7P3", records.first().missionReference)
             assertEquals("mission-1", records.first().missionId)
             assertNull(records[1].missionReference, "Older ledger rows remain supported.")
+            assertEquals(RiderText.MissionCode to "DZ9-X8W-7P3", payoutReference(records.first()))
+            assertEquals(RiderText.SourceReference to "W12-345-65Q", payoutReference(records[3]))
+            assertEquals("payout-request-1", records[3].missionId, "Internal source identity remains intact.")
+            assertEquals(RiderText.SourceReference to null, payoutReference(records[1]), "Missing legacy aliases must not display a raw source ID.")
             assertEquals(listOf(500, 100, 50, 0, 0), records.map { it.payableAmountCfa })
             assertEquals(listOf(500, -100, -50, 0, 0), records.map { it.recordedPayImpactCfa })
             assertEquals(PayoutEntryStatus.REVIEW_REQUIRED, records[3].status)

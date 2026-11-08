@@ -99,7 +99,8 @@ fun PayoutScreen(
                     item(key = record.id) {
                         RiderCard {
                             Column(Modifier.fillMaxWidth().padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                RiderKeyValueRow(appText(RiderText.SourceReference), record.missionReference?.takeIf(String::isNotBlank) ?: record.missionId)
+                                val reference = payoutReference(record)
+                                RiderKeyValueRow(appText(reference.first), reference.second ?: appText(RiderText.NotAvailableYet))
                                 RiderKeyValueRow(appText(RiderText.RecordedAmount), record.amountCfa.formatCfa())
                                 RiderKeyValueRow(appText(RiderText.RecordedPayImpact), record.recordedPayImpactCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
                                 Text(appText(RiderText.Status) + ": " + appText(when (record.status) {
@@ -126,3 +127,8 @@ fun PayoutScreen(
         }
     }
 }
+
+/** A financial source ID is not necessarily a mission. Missing legacy aliases stay unavailable. */
+internal fun payoutReference(record: PayoutHistoryItem): Pair<RiderText, String?> =
+    record.missionReference?.takeIf(String::isNotBlank)?.let { RiderText.MissionCode to it }
+        ?: (RiderText.SourceReference to record.publicReference?.takeIf(String::isNotBlank))
