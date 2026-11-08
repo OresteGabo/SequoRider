@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.orestegabo.sequorider.feature.settings.missionModeText
 import dev.orestegabo.sequorider.feature.settings.missionWorkforceText
+import dev.orestegabo.sequorider.feature.settings.missionStatusText
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.MissionStatus
@@ -132,13 +133,13 @@ private fun MissionCard(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(mission.code, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Text(mission.pickupName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("${mission.pickupArea} -> ${mission.dropoffArea}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(listOf(mission.pickupArea, mission.dropoffArea).filter(String::isNotBlank).joinToString(" → "), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                RiderStatusPill(if (mission.status == MissionStatus.HANDED_TO_SEQUO) appText(RiderText.ConsolidationReceived) else mission.status.name)
+                RiderStatusPill(missionStatusText(mission.status))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RiderMetric(appText(RiderText.MissionType), missionModeText(mission.deliveryOptionId, mission.serviceType.name), Modifier.weight(1f))
-                RiderMetric(appText(RiderText.Status), mission.status.name, Modifier.weight(1f))
+                RiderMetric(appText(RiderText.Status), missionStatusText(mission.status), Modifier.weight(1f))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RiderMetric(appText(RiderText.PickupCount), mission.pickupStops.size.toString(), Modifier.weight(1f))
@@ -162,9 +163,6 @@ private fun MissionCard(
                     Button(onClick = { onRouteClick(mission) }, enabled = !actionInProgress, modifier = Modifier.weight(1f)) {
                         Text(appText(RiderText.ViewRoute))
                     }
-                }
-                OutlinedButton(onClick = {}, modifier = Modifier.weight(1f), enabled = false) {
-                    Text(appText(RiderText.ActionUnavailable))
                 }
             }
         }

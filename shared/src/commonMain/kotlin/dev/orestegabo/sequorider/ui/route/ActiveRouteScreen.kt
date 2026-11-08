@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.orestegabo.sequorider.feature.settings.missionModeText
 import dev.orestegabo.sequorider.feature.settings.missionWorkforceText
+import dev.orestegabo.sequorider.feature.settings.missionStatusText
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.MissionDestinationType
@@ -65,6 +66,7 @@ fun ActiveRouteScreen(
 
     if (mission != null && cannotPickupDialogOpen) {
         CannotPickupDialog(
+            pickupProblem = mission.status == MissionStatus.ACCEPTED_BY_COURIER,
             reason = cannotPickupReason,
             reasonTouched = cannotPickupReasonTouched,
             onReasonChange = {
@@ -84,8 +86,6 @@ fun ActiveRouteScreen(
             },
         )
     }
-
-    val genericDeliveryProblemReason = appText(RiderText.ReportDeliveryProblem)
 
     LazyColumn(
         modifier = modifier.padding(horizontal = 16.dp),
@@ -108,7 +108,7 @@ fun ActiveRouteScreen(
                 Text(appText(RiderText.MissionDetail), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(mission.code, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                    RiderStatusPill(if (mission.status == MissionStatus.HANDED_TO_SEQUO) appText(RiderText.ConsolidationReceived) else mission.status.name)
+                    RiderStatusPill(missionStatusText(mission.status))
                 }
                 if (actionFailed) {
                     Text(appText(RiderText.MissionActionFailed), color = MaterialTheme.colorScheme.error)
@@ -346,11 +346,8 @@ fun ActiveRouteScreen(
                 }
                 OutlinedButton(
                     onClick = {
-                        if (mission.status == MissionStatus.ACCEPTED_BY_COURIER) {
-                            cannotPickupDialogOpen = true
-                        } else {
-                            onReportProblem(mission, genericDeliveryProblemReason)
-                        }
+                        if (mission.status != MissionStatus.ACCEPTED_BY_COURIER) cannotPickupReason = deliveryProblemReason
+                        cannotPickupDialogOpen = true
                     },
                     enabled = !actionInProgress && mission.status in problemReportableStatuses,
                     modifier = Modifier.fillMaxWidth(),
@@ -485,6 +482,7 @@ private fun RelayDepositPanel(
 
 @Composable
 private fun CannotPickupDialog(
+    pickupProblem: Boolean,
     reason: String,
     reasonTouched: Boolean,
     onReasonChange: (String) -> Unit,
@@ -493,7 +491,7 @@ private fun CannotPickupDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(appText(RiderText.CannotPickup)) },
+        title = { Text(appText(if (pickupProblem) RiderText.CannotPickup else RiderText.ReportDeliveryProblem)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
@@ -501,7 +499,7 @@ private fun CannotPickupDialog(
                     onValueChange = onReasonChange,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(appText(RiderText.CannotPickupReason)) },
-                    placeholder = { Text(appText(RiderText.CannotPickupReasonPlaceholder)) },
+                    placeholder = { Text(appText(if (pickupProblem) RiderText.CannotPickupReasonPlaceholder else RiderText.DeliveryProblemReasonPlaceholder)) },
                     supportingText = {
                         Text(
                             if (reasonTouched && reason.isBlank()) {

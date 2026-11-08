@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequorider.feature.settings.missionStatusText
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.MissionStatus
@@ -74,7 +75,7 @@ fun HistoryScreen(
                         RiderMetric(appText(RiderText.Completed), historyMissions.count { it.status.isCompletedHistory() }.toString(), Modifier.weight(1f))
                         RiderMetric(appText(RiderText.Failed), historyMissions.count { it.status.isProblemHistory() }.toString(), Modifier.weight(1f))
                     }
-                    RiderKeyValueRow(appText(RiderText.Returned), "0")
+                    RiderKeyValueRow(appText(RiderText.Returned), appText(RiderText.NotAvailableYet))
                 }
             }
         }
@@ -120,7 +121,7 @@ private fun HistoryMissionCard(mission: RiderMission) {
                     Text(mission.code, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Text("${mission.pickupArea} -> ${mission.dropoffArea}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                RiderStatusPill(if (mission.status == MissionStatus.HANDED_TO_SEQUO) appText(RiderText.ConsolidationReceived) else mission.status.name)
+                RiderStatusPill(missionStatusText(mission.status))
             }
             RiderKeyValueRow(appText(RiderText.PickupStops), mission.pickupStops.joinToString { it.title })
             RiderKeyValueRow(appText(RiderText.DropoffStop), mission.dropoffStop.title)
