@@ -58,7 +58,10 @@ fun PayoutScreen(
         }
         if (actual != null) {
             if (!actual.payable) {
-                item { RiderCard { Text(appText(RiderText.SalaryHandledOutsideSplits), Modifier.padding(14.dp)) } }
+                val workforceCopy = if (actual.workforceType?.uppercase() in setOf("SEQUO_SALARIED", "SEQUOSALARIED", "SALARIED")) {
+                    RiderText.SalaryHandledOutsideSplits
+                } else RiderText.WorkforceUnknown
+                item { RiderCard { Text(appText(workforceCopy), Modifier.padding(14.dp)) } }
             }
             if (actual.payable || (actual.earnedTotalCfa ?: 0) > 0 || actual.availableCfa > 0 || actual.onHoldCfa > 0) {
                 item {
