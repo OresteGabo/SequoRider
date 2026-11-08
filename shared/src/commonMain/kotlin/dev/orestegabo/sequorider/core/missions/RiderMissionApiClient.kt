@@ -165,6 +165,8 @@ private data class DeliveryMissionDto(
     val dropoffArea: String? = null,
     val homeDestination: HomeDestinationDto? = null,
     val relayDestination: RelayDestinationDto? = null,
+    val deliveryOption: DeliveryModeDto? = null,
+    val assignmentWorkforceType: String? = null,
 ) {
     fun toModel(): RiderMission {
         val pickup = PickupStop(
@@ -207,7 +209,9 @@ private data class DeliveryMissionDto(
             expectedPayoutCfa = courierFeeCfa,
             customerDeliveryFeeCfa = customerDeliveryFeeCfa,
             shortfallCfa = shortfallCfa,
-            slaLabel = status.name,
+            slaLabel = deliveryOption?.let { "${it.etaMinMinutes}–${it.etaMaxMinutes} min" } ?: status.name,
+            deliveryOptionId = deliveryOption?.id,
+            assignmentWorkforceType = assignmentWorkforceType,
             customerDeliveryNote = homeDestination?.let {
                 listOfNotNull(it.recipientName, it.phoneNumber, it.streetHint).joinToString(" · ")
             },
@@ -308,3 +312,6 @@ private data class HomeDestinationDto(
 @Serializable
 private data class RelayDestinationDto(val id: String, val name: String, val city: String? = null,
     val neighborhood: String? = null, val landmark: String? = null)
+
+@Serializable
+private data class DeliveryModeDto(val id: String, val etaMinMinutes: Int, val etaMaxMinutes: Int)

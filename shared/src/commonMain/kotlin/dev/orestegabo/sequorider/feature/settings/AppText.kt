@@ -81,6 +81,12 @@ enum class RiderText {
     AcceptMission,
     ActionUnavailable,
     MissionType,
+    ModeExpress,
+    ModeClassic,
+    ModeDeferred,
+    Workforce,
+    WorkforceSequo,
+    WorkforceIndependent,
     PickupCount,
     DropoffCount,
     Distance,
@@ -290,6 +296,12 @@ private val englishText = mapOf(
     RiderText.OfflineMissions to "Mission data is offline. Showing local data when available.",
     RiderText.AcceptMission to "Accept mission",
     RiderText.ActionUnavailable to "Not available yet",
+    RiderText.ModeExpress to "Express",
+    RiderText.ModeClassic to "Classic",
+    RiderText.ModeDeferred to "Deferred",
+    RiderText.Workforce to "Workforce",
+    RiderText.WorkforceSequo to "SEQUO salaried",
+    RiderText.WorkforceIndependent to "Independent",
     RiderText.MissionType to "Type",
     RiderText.PickupCount to "Pickups",
     RiderText.DropoffCount to "Drop-offs",
@@ -491,6 +503,12 @@ private val frenchText = mapOf(
     RiderText.OfflineMissions to "Donnees missions hors ligne. Donnees locales affichees si disponibles.",
     RiderText.AcceptMission to "Accepter la mission",
     RiderText.ActionUnavailable to "Pas encore disponible",
+    RiderText.ModeExpress to "Express",
+    RiderText.ModeClassic to "Classique",
+    RiderText.ModeDeferred to "Différée",
+    RiderText.Workforce to "Équipe",
+    RiderText.WorkforceSequo to "Salarié SEQUO",
+    RiderText.WorkforceIndependent to "Indépendant",
     RiderText.MissionType to "Type",
     RiderText.PickupCount to "Retraits",
     RiderText.DropoffCount to "Depots",
@@ -621,3 +639,15 @@ private val frenchText = mapOf(
     RiderText.AdminLoginRequested to "Demandee",
     RiderText.AdminLoginExpires to "Expire",
 )
+
+@Composable
+fun missionModeText(mode: String?, legacy: String): String = when (mode) {
+    "EXPRESS" -> appText(RiderText.ModeExpress)
+    "CLASSIC" -> appText(RiderText.ModeClassic)
+    "DEFERRED" -> appText(RiderText.ModeDeferred)
+    else -> legacy
+}
+
+@Composable
+fun missionWorkforceText(workforce: String): String = appText(
+    if (workforce == "SequoSalaried") RiderText.WorkforceSequo else RiderText.WorkforceIndependent)

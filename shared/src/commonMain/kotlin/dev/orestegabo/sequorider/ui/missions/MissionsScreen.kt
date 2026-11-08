@@ -21,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequorider.feature.settings.missionModeText
+import dev.orestegabo.sequorider.feature.settings.missionWorkforceText
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.MissionStatus
@@ -135,7 +137,7 @@ private fun MissionCard(
                 RiderStatusPill(mission.status.name)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                RiderMetric(appText(RiderText.MissionType), mission.serviceType.name, Modifier.weight(1f))
+                RiderMetric(appText(RiderText.MissionType), missionModeText(mission.deliveryOptionId, mission.serviceType.name), Modifier.weight(1f))
                 RiderMetric(appText(RiderText.Status), mission.status.name, Modifier.weight(1f))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -85,6 +85,24 @@ class RiderMissionClientTest {
     }
 
     @Test
+    fun readsTheConfiguredModeEtaAndActualWorkforce() = runBlocking<Unit> {
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        server.createContext("/api/rider/missions/mission-1") { exchange ->
+            val response = mission.dropLast(1) + """, "deliveryOption":{"id":"DEFERRED","etaMinMinutes":1440,"etaMaxMinutes":2880},"assignmentWorkforceType":"Freelancer"}"""
+            val bytes = response.toByteArray(); exchange.responseHeaders.set("Content-Type", "application/json")
+            exchange.sendResponseHeaders(200, bytes.size.toLong()); exchange.responseBody.use { it.write(bytes) }
+        }
+        server.start()
+        val client = RiderMissionApiClient("http://127.0.0.1:${server.address.port}", { "rider-fixture" })
+        try {
+            val current = client.getMission("mission-1")
+            assertEquals("DEFERRED", current.deliveryOptionId)
+            assertEquals("1440–2880 min", current.slaLabel)
+            assertEquals("Freelancer", current.assignmentWorkforceType)
+        } finally {client.close();server.stop(0)}
+    }
+
+    @Test
     fun proofRequestUsesJsonAndStableRetryKeyAndDoesNotMaskRejection() = runBlocking<Unit> {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         var calls = 0

@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.orestegabo.sequorider.feature.settings.missionModeText
+import dev.orestegabo.sequorider.feature.settings.missionWorkforceText
 import dev.orestegabo.sequorider.feature.settings.RiderText
 import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.model.MissionDestinationType
@@ -128,7 +130,8 @@ fun ActiveRouteScreen(
                     RiderKeyValueRow(appText(RiderText.MissionCode), mission.code)
                     RiderKeyValueRow(appText(RiderText.MissionId), mission.id)
                     RiderKeyValueRow(appText(RiderText.OrderId), mission.orderId)
-                    RiderKeyValueRow(appText(RiderText.MissionType), mission.serviceType.name)
+                    RiderKeyValueRow(appText(RiderText.MissionType), missionModeText(mission.deliveryOptionId, mission.serviceType.name))
+                    mission.assignmentWorkforceType?.let { RiderKeyValueRow(appText(RiderText.Workforce), missionWorkforceText(it)) }
                     RiderKeyValueRow(appText(RiderText.Distance), mission.distanceKm.ifBlank { appText(RiderText.NotAvailableYet) })
                     RiderKeyValueRow(appText(RiderText.PayoutPreview), mission.expectedPayoutCfa?.formatCfa() ?: appText(RiderText.NotAvailableYet))
                 }
