@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Preserve ordinary settings, but require sign-in after restoring on another device. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="sequo_rider_auth_session.xml" />
+        <exclude domain="sharedpref" path="sequo_rider_secure_tokens.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="sequo_rider_auth_session.xml" />
+        <exclude domain="sharedpref" path="sequo_rider_secure_tokens.xml" />
+    </device-transfer>
+</data-extraction-rules>

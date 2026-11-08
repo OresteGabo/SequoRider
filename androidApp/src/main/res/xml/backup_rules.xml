@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keystore keys do not transfer with these encrypted authentication preferences. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="sequo_rider_auth_session.xml" />
+    <exclude domain="sharedpref" path="sequo_rider_secure_tokens.xml" />
+</full-backup-content>
