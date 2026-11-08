@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 from urllib.parse import urlsplit
+from acceptance_support import SigningConfigurationError, validate_development_signing, app_payload_metadata
 
 
 def main():
@@ -19,7 +20,13 @@ def main():
     parser.add_argument("--release-id", required=True)
     parser.add_argument("--environment", choices=("LOCAL_FIXTURE", "STAGING"), required=True)
     parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--development-signing-reference", type=Path,
+                        help="Private identity/team reference for an installed Apple Development certificate; iOS LOCAL_FIXTURE only.")
     args = parser.parse_args()
+    try:
+        development_signing = validate_development_signing(args.development_signing_reference, args.platform, args.environment)
+    except SigningConfigurationError as error:
+        parser.error(str(error))
     target = urlsplit(args.api_base_url)
     local = target.hostname in ("127.0.0.1", "localhost", "10.0.2.2", "::1")
     if (target.username is not None or target.password is not None or target.query or target.fragment or
@@ -63,10 +70,11 @@ def main():
         app_id = "dev.orestegabo.sequorider.SequoRider." + suffix
         # Prebuild the shared framework offline. Xcode's existing integration script then reuses it.
         subprocess.run(gradle + [":shared:linkDebugFrameworkIosSimulatorArm64"], cwd=root, env=env, check=True)
+        simulator_signing_flags = development_signing.xcode_flags() if development_signing else ["CODE_SIGNING_ALLOWED=NO"]
         subprocess.run(["xcodebuild", "-project", str(root / "iosApp/iosApp.xcodeproj"),
             "-scheme", "iosApp", "-configuration", "Debug", "-sdk", "iphonesimulator",
             "-destination", "generic/platform=iOS Simulator", "-derivedDataPath", str(output / "DerivedData"),
-            "-disableAutomaticPackageResolution", "-skipPackageUpdates", "CODE_SIGNING_ALLOWED=NO",
+            "-disableAutomaticPackageResolution", "-skipPackageUpdates", *simulator_signing_flags,
             "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES",
             "PRODUCT_BUNDLE_IDENTIFIER=" + app_id, "INFOPLIST_FILE=" + str(fixture_info),
             "build"], cwd=root, env=env, check=True)
@@ -84,12 +92,14 @@ def main():
         "sourceHead": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip(),
         "artifact": str(artifact), "installedOrLaunched": False,
         "trackedDirtyPaths": dirty_paths,
-        "signing": "debug key" if args.platform == "android" else "unsigned simulator only"}
+        "signing": "debug key" if args.platform == "android" else
+            ("validated local Apple Development simulator" if development_signing else "unsigned simulator only")}
     if artifact.is_file():
         metadata["sha256"] = hashlib.sha256(artifact.read_bytes()).hexdigest()
     else:
         executable = artifact / plistlib.loads((artifact / "Info.plist").read_bytes())["CFBundleExecutable"]
         metadata["executableSha256"] = hashlib.sha256(executable.read_bytes()).hexdigest()
+        metadata.update(app_payload_metadata(artifact))
     (output / "build-target.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(json.dumps(metadata, indent=2))
 
