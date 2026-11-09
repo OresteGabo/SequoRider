@@ -30,6 +30,12 @@ class AuthApiClient(
     private val deviceIdProvider: () -> String,
     private val environment: String = NetworkConfig.Environment,
 ) {
+    suspend fun testAccountsAvailable(): Boolean = httpClient.get(apiUrl("auth/test-accounts")).body<TestCapability>().enabled
+    suspend fun loginWithTestAccount(username:String,password:String): AuthSession = httpClient.post(apiUrl("auth/test-accounts/session")) {
+        headers { append(HttpHeaders.ContentType, ContentType.Application.Json.toString()) }
+        setBody(TestLoginRequest(username,password,"RIDER",TestLoginDevice(deviceIdProvider(),"SEQUO_RIDER")))
+    }.body()
+
     suspend fun developmentAccess(): DevelopmentRiderAccess {
         if (!developmentRiderAccessAllowed(environment, baseUrl)) return DevelopmentRiderAccess()
         val access: DevelopmentRiderAccess = httpClient.get(apiUrl("auth/development-access")) {
@@ -297,3 +303,7 @@ data class DevelopmentRiderAccess(val enabled: Boolean = false, val mode: String
 @Serializable
 private data class DevelopmentRiderSessionRequest(val appSource: String, val accountKey: String,
     val deviceId: String, val deviceLabel: String = "SEQUO Rider local fixture")
+
+@Serializable private data class TestCapability(val enabled: Boolean = false)
+@Serializable private data class TestLoginRequest(val username:String,val password:String,val appFamily:String,val device:TestLoginDevice)
+@Serializable private data class TestLoginDevice(val deviceId:String,val appSource:String)

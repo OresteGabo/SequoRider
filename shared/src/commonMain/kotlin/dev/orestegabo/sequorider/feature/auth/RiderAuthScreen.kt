@@ -32,6 +32,8 @@ fun RiderAuthScreen(
     errorMessage: String?,
     onGoogleLogin: () -> Unit,
     onLocalDemo: () -> Unit,
+    testAccountsAvailable: suspend () -> Boolean = { false },
+    onTestAccountLogin: suspend (String,String) -> Unit = { _,_ -> },
     fixtureAccounts: List<DevelopmentRiderAccount> = emptyList(),
     onFixtureLogin: (String) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -61,6 +63,9 @@ fun RiderAuthScreen(
             ) {
                 Text(appText(RiderText.ContinueLocalDemo))
             }
+            TestAccountLoginEntry(testAccountsAvailable, onTestAccountLogin,
+                dev.orestegabo.sequorider.feature.settings.LocalAppLanguage.current == dev.orestegabo.sequorider.feature.settings.AppLanguage.French,
+                Modifier.fillMaxWidth())
             if (fixtureAccounts.isNotEmpty()) {
                 Text(appText(RiderText.LocalFixtureAccounts), style = MaterialTheme.typography.titleSmall)
                 Text(appText(RiderText.LocalFixtureDetail), style = MaterialTheme.typography.bodySmall)

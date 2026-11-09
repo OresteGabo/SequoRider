@@ -397,6 +397,13 @@ fun SequoRiderShell(
                         useLocalDemo = true
                         authError = null
                     },
+                    testAccountsAvailable = authRepository::testAccountsAvailable,
+                    onTestAccountLogin = { username, password ->
+                        val user = authRepository.loginWithTestAccount(username,password)
+                        currentSection = RiderSection.Missions
+                        signedInUser = user
+                        accessToken = sessionStore.get()?.accessToken
+                    },
                     fixtureAccounts = fixtureAccess.accounts,
                     onFixtureLogin = { accountKey ->
                         if (!authLoading) scope.launch {

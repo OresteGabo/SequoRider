@@ -11,6 +11,14 @@ class AuthRepository(
 ) {
     private val sessionMutex = Mutex()
 
+    suspend fun testAccountsAvailable() = authApiClient.testAccountsAvailable()
+    suspend fun loginWithTestAccount(username:String,password:String): CurrentUser = sessionMutex.withLock {
+        val session = authApiClient.loginWithTestAccount(username,password)
+        val user = requireRiderAccess(authApiClient.currentUser(session.accessToken))
+        saveSession(session,user)
+        user
+    }
+
     suspend fun developmentAccess(): DevelopmentRiderAccess = authApiClient.developmentAccess()
 
     suspend fun loginWithFixture(accountKey: String): CurrentUser = sessionMutex.withLock {
