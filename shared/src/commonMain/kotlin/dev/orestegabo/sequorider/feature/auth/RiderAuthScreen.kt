@@ -1,5 +1,6 @@
 package dev.orestegabo.sequorider.feature.auth
 
+import dev.orestegabo.sequo.design.sequoBrandSymbolPainter
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,8 +26,6 @@ import dev.orestegabo.sequorider.feature.settings.appText
 import dev.orestegabo.sequorider.ui.components.RiderCard
 import org.jetbrains.compose.resources.painterResource
 import sequorider.shared.generated.resources.Res
-import sequorider.shared.generated.resources.rider_brand_icon
-
 @Composable
 fun RiderAuthScreen(
     isLoading: Boolean,
@@ -40,7 +39,7 @@ fun RiderAuthScreen(
     RiderCard(modifier = modifier.fillMaxWidth()) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(SequoDesign.CardPadding), verticalArrangement = Arrangement.spacedBy(SequoDesign.SectionGap)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Image(painterResource(Res.drawable.rider_brand_icon), contentDescription = null, modifier = Modifier.size(48.dp))
+                Image(sequoBrandSymbolPainter(), contentDescription = null, modifier = Modifier.size(48.dp))
                 Text(appText(RiderText.AppName), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             }
             Text(appText(RiderText.AuthTitle), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
